@@ -1,0 +1,11 @@
+TODO:
+- Add Integration to get images
+- Add Sorting for Library
+- Favourites in Library
+- Advanced Menu for Games (Library), i.e. banners, single data, specified locations etc
+- Setup for Installation
+- Game Download and Installation
+- Preset Data to ship
+- Search function (Library)
+- game metadata advanced, sort by filters, acquire on web?
+- EXE package

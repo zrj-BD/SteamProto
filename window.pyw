@@ -229,7 +229,7 @@ def make_editor(type: str):
             self.close()
             if type == "data": index = 1
             elif type == "exe": index = 2
-            refresh_tab(window.tabs, index, getattr(window, type)())
+            refresh_tab(window.tabs, index, getattr(window, type)())  # pyright: ignore[reportPossiblyUnboundVariable]
 
     editor = Editor()
     editor.show()
@@ -250,13 +250,13 @@ def get_struc(keys: Tuple[list[str], list[str]], layout: QGridLayout, ref: Dict[
         for k in _keys:
             if k == "date":
                 out[i][k] = int(time.time())
-            elif layout.itemAtPosition(n, p).widget().text() != "": out[i][k] = layout.itemAtPosition(n, p).widget().text()
+            elif layout.itemAtPosition(n, p).widget().text() != "": out[i][k] = layout.itemAtPosition(n, p).widget().text()  # type: ignore
             p += 1
         n += 1
     return out
 
 
-def build_struc(keys: Tuple[list[str], list[str]], layout: QGridLayout, files: Tuple[Dict[str, Dict[str, Any]], Dict[str, Dict[str, Any]]], type: str, window: Optional[QWidget]):
+def build_struc(keys: Tuple[list[str], list[str]], layout: QGridLayout, files: Tuple[Dict[str, Dict[str, Any]], Optional[Dict[str, Dict[str, Any]]]], type: str, window: Optional[QWidget]):
 
     n = 1
     for i in files[0]:
@@ -270,29 +270,29 @@ def build_struc(keys: Tuple[list[str], list[str]], layout: QGridLayout, files: T
             _keys = keys
         
         para = 0
-        for j in _keys:
+        for j in _keys: # pyright: ignore[reportPossiblyUnboundVariable]
             if para == 0: p = 1 
-            else: p = len(_keys[0]) + 1
+            else: p = len(_keys[0]) + 1 # pyright: ignore[reportPossiblyUnboundVariable]
             for k in j:
                 if k == "date":
-                    try: date = datetime.fromtimestamp(files[para][i]["date"])
+                    try: date = datetime.fromtimestamp(files[para][i]["date"]) # pyright: ignore[reportOptionalSubscript]
                     except Exception: date = None
                     label = QLabel(str(date))
                 elif k == "exesrc":
                     if type == "show":
-                        try: label = QLabel(files[para][i][k])
+                        try: label = QLabel(files[para][i][k]) # pyright: ignore[reportOptionalSubscript]
                         except Exception: label = QLabel(None)
                     elif type == "edit":
                         try: 
-                            label = QPushButton(files[para][i][k])
+                            label = QPushButton(files[para][i][k]) # pyright: ignore[reportOptionalSubscript]
                         except Exception: label = QPushButton(None)
                         label.clicked.connect(lambda checked, folder=i, l=label: pick_path(window, folder, l))
                 else:
                     if type == "show":
-                        try: label = QLabel(files[para][i][k])
+                        try: label = QLabel(files[para][i][k]) # pyright: ignore[reportOptionalSubscript]
                         except Exception: label = QLabel(None)
                     elif type == "edit":
-                        try: label = QLineEdit(files[para][i][k])
+                        try: label = QLineEdit(files[para][i][k]) # pyright: ignore[reportOptionalSubscript]
                         except Exception: label = QLineEdit(None)
                         label.setMaximumWidth(200)
                 label.setFixedHeight(40)
@@ -301,12 +301,12 @@ def build_struc(keys: Tuple[list[str], list[str]], layout: QGridLayout, files: T
             para += 1
             if len(files) == 2 and type == "show":
                 status = QLabel()
-                length = len(_keys[0]) + len(_keys[1]) + 1
+                length = len(_keys[0]) + len(_keys[1]) + 1 # pyright: ignore[reportPossiblyUnboundVariable]
                 try:
-                    if files[0][i]["build"] != files[1][i]["build"]:
-                        pix = QPixmap("data/x_DATA.png").scaled(40, 40, Qt.AspectRatioMode.KeepAspectRatio, Qt.TransformationMode.SmoothTransformation)
-                    elif files[0][i]["build"] == files[1][i]["build"]:
+                    if files[0][i]["build"] == files[1][i]["build"]: # pyright: ignore[reportOptionalSubscript]
                         pix = QPixmap("data/check_DATA.png").scaled(40, 40, Qt.AspectRatioMode.KeepAspectRatio, Qt.TransformationMode.SmoothTransformation)
+                    else:
+                        pix = QPixmap("data/x_DATA.png").scaled(40, 40, Qt.AspectRatioMode.KeepAspectRatio, Qt.TransformationMode.SmoothTransformation)
                     status.setPixmap(pix)
                 except Exception: pass
                 layout.addWidget(status, n, length)
@@ -540,7 +540,7 @@ if __name__ == "__main__":
     p.add_argument("--uidata", "-ui", default=UI_FILE_DEFAULT, help="Path to UI JSON")
     args = p.parse_args()
     #falesafe for first start and if file gets lost
-    if not os.path.exists(os.path.join(os.path.dirname(os.getcwd()), "_metadata")):
+    if not os.path.exists(os.path.join(os.path.dirname(os.getcwd()), "_metadata")) or not os.path.exists(os.path.join(os.path.dirname(os.getcwd()), "_metadata", "metadata.json")):
         main.main()
         web.main()
     if not os.path.exists(args.uidata):

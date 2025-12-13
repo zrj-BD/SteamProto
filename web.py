@@ -43,7 +43,7 @@ def get_latest_build_info(appids: List[str]) -> Dict[str, Dict[str, Any]]:
         results[appid] = {
             "appid": appid,
             "build": build_match.group(1) if build_match else None,
-            "time": int(time_match.group(1)) if time_match else None,
+            "date": int(time_match.group(1)) if time_match else None,
         }
 
     return results
@@ -64,7 +64,7 @@ def main():
         if appid in steam_data:
             results[game] = steam_data[appid]
         else:
-            results[game] = {"appid": appid, "build": None, "time": None}
+            results[game] = {"appid": appid, "build": None, "date": None}
 
     with open(args.out, "w", encoding="utf-8") as fh:
         json.dump(results, fh, indent=2, ensure_ascii=False)
