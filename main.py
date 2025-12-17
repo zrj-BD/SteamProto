@@ -49,19 +49,6 @@ def load_config(path: Optional[str]) -> Dict[str, Any]:
         return {}
 
 
-def merge_value(existing, new):
-    if existing == new:
-        return existing
-    if isinstance(existing, list):
-        if new not in existing:
-            existing.append(new)
-        return existing
-    else:
-        if existing != new:
-            return [existing, new]
-        return existing
-
-
 def _match_value_from_regex(m: Optional[re.Match]) -> Optional[str]:
     """Safely extract first capturing group if present else full match. Avoid IndexError."""
     if not m:
@@ -123,6 +110,19 @@ def load_existing_metadatas(meta_dir: str) -> Tuple[Dict[str, Any], Dict[str, An
             meta2 = {}
 
     return meta1, meta2
+
+
+def merge_value(existing, new):
+    if existing == new:
+        return existing
+    if isinstance(existing, list):
+        if new not in existing:
+            existing.append(new)
+        return existing
+    else:
+        if existing != new:
+            return [existing, new]
+        return existing
 
 
 def save_metadata_outputs(meta_dir: str, meta1: Dict[str, Any], meta2: Dict[str, Any]):

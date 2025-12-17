@@ -1,29 +1,36 @@
-from PyQt6.QtWidgets import QFileDialog, QSizePolicy, QHBoxLayout, QApplication, QVBoxLayout, QWidget, QLabel, QPushButton, QGridLayout, QTabWidget, QScrollArea, QLineEdit, QMessageBox
+##Imports
+# PyQt6
+from PyQt6.QtWidgets import QMainWindow, QFileDialog, QSizePolicy, QHBoxLayout, QApplication, QVBoxLayout, QWidget, QLabel, QPushButton, QGridLayout, QTabWidget, QScrollArea, QLineEdit, QMessageBox
 from PyQt6.QtGui import QIcon, QFont, QPixmap
-from PyQt6.QtCore import Qt, QSize # pyright: ignore[reportUnusedImport]
+from PyQt6.QtCore import Qt, QUrl, QTimer
+from PyQt6.QtWebEngineWidgets import QWebEngineView
+from PyQt6.QtWebEngineCore import QWebEngineProfile, QWebEnginePage, QWebEngineUrlRequestInterceptor
+# random
 import sys
 import json
 import os
-from typing import Dict, Any, Tuple, Optional
+from typing import Dict, Any, List, Tuple, Optional
 import argparse
 from datetime import datetime
 import subprocess
 import time
+import re
+# programs
 import web
 import remover
 import main
 # gottverdammte 3 stunden gewastet weil ich vergessen habe recents.json zu checken und das ding einfach nicht den eintrag hat bro
 # eigenständig erarbeitet ohne QT wissen und ohne irgendein programmierwissen diesen wunderschönen grid bauer errichtet
 # bro im extremely proud of you man, you did all this shit (an application) without even any knowledge of the thing. i mean you learned entirely how to build the window, read json, write json, scan, etc all of that which you didnt know. i mean DAMN 430 lines?? all yourself? and it actually is functional and works? crazy shit
+##file locations
 METADATA_DEFAULT = os.path.join(os.path.dirname(os.getcwd()), "_metadata", "metadata.json")
 RECENTS_FILE_DEFAULT = os.path.join(os.path.dirname(os.getcwd()), "_metadata", "recents.json")
 UI_FILE_DEFAULT = os.path.join(os.path.dirname(os.getcwd()), "_metadata", "ui.json")
+##loading data
 
-
-def load_data(files) -> Tuple[Dict[str, Any], Optional[Dict[str, Any]]]:
+def load_data(files) -> Tuple[Dict[str, Dict[str, Any]], Optional[Dict[str, Dict[str, Any]]]]:
     """
-    Load both metadata.json and metadata_fix.json if present, return two dicts.
-    If not present return empty dicts. Sanitize bad keys.
+    Load both files and return dicts.
     """
     list = []
     for i in files:
@@ -49,20 +56,9 @@ def save_data(og, data, file):
                 og[key] = value
         return og
     write = merge(og, data)
-    try:
-        path = getattr(args, f"{file}data")
-        with open(path, "w", encoding="utf-8") as fh:
-            json.dump(write, fh, indent=2, ensure_ascii=True)
-    except Exception:
-        pass
-
-
-def run_exe(exe: str):
-    try: 
-        subprocess.Popen([exe], cwd=os.path.dirname(exe))
-        window.close()
-    except Exception:
-        print("Error running exe")
+    path = getattr(args, f"{file}data")
+    with open(path, "w", encoding="utf-8") as fh:
+        json.dump(write, fh, indent=2, ensure_ascii=True)
 
 
 def create_ui(ui: Optional[Dict[str, Dict[str, Any]]]):
@@ -72,184 +68,30 @@ def create_ui(ui: Optional[Dict[str, Dict[str, Any]]]):
         ui[i] = {"imagesrc": f"data//{i}.png"}
     with open(args.uidata, "w", encoding="utf-8") as fh:
         json.dump(ui, fh, indent=2, ensure_ascii=True)
+##running files
 
+def run_exe(exe: str):
+    try: 
+        subprocess.Popen([exe], cwd=os.path.dirname(exe))
+        window.close()
+    except Exception:
+        print("Error running exe")
+##struc build
 
-def confirm(parent: QWidget, message: str, action, default):
-    msg_box = QMessageBox(parent)
-    msg_box.resize(400, 200)
-    msg_box.setWindowTitle("Confirm Action")
-    msg_box.setText(message)
-    msg_box.setIcon(QMessageBox.Icon.Question)
-    msg_box.setStandardButtons(QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No)
-    msg_box.setDefaultButton(getattr(QMessageBox.StandardButton, default))
-    
-    result = msg_box.exec()  # modal; waits for user
-    if result == QMessageBox.StandardButton.Yes:
-        action()
-
-
-def pick_path(window, folder, label):
-    path, _ = QFileDialog.getOpenFileName(
-        window,
-        "Select EXE",
-        os.path.join(os.path.dirname(os.getcwd()), folder),
-        "Executable Files (*.exe);;All Files (*)"
-    )
-    if path:
-        label.setText(path)
-
-
-def make_editor(type: str):
-
-    class Editor(QWidget):
-        def __init__(self):
-            super().__init__()
-            self.resize(1500, 900)
-            self.setWindowTitle("Version Checker v1 Editor")
-            self.setWindowIcon(QIcon("data\\icon_DATA.png"))
-            self.UI()
-
-        def UI(self):
-            mainlayout = QVBoxLayout()
-            mainlayout.setContentsMargins(0, 0, 0, 0)
-            mainlayout.addWidget(getattr(self, type)())
-            self.setLayout(mainlayout)
-
-        def data(self):
-            items = load_data(["meta", "recent"])
-
-            ult = QVBoxLayout()
-            ult.setContentsMargins(0, 0, 0, 0)
-
-            button_row = QHBoxLayout()
-            button_row.setSpacing(0)
-            button_row.setContentsMargins(0, 0, 0, 0)
-            btn_exit = QPushButton("Exit")
-            btn_exit.clicked.connect(lambda: self.updater())
-            btn_exit.setFixedWidth(100)
-            button_row.addWidget(btn_exit)
-            btn_save = QPushButton("Save")
-            btn_save.setFixedWidth(100)
-            button_row.addWidget(btn_save)
-            button_row.setAlignment(Qt.AlignmentFlag.AlignLeft)
-            ult.addLayout(button_row)
-
-            layout = QGridLayout()
-            layout.setSpacing(50)
-            layout.setContentsMargins(10, 10, 10, 30) #links oben rechts unten
-            ult.addLayout(layout)
-
-            headings = [
-                "Game", "AppID", "Emulator", "Last Date", "Last Build", "Newest Build", "Newest Date"
-                ]
-            for i, heading in enumerate(headings):
-                label = QLabel(heading)
-                bold = QFont()
-                bold.setBold(True)
-                label.setFont(bold)
-                label.setFixedHeight(30)
-                layout.addWidget(label, 0, i)
-
-            KEYS = (
-                [   "appid", "emulator", "date", "build"   ],
-                [   "build", "date"   ]
-            )
-
-            build_struc(KEYS, layout, items, "edit", self)
-
-            btn_save.clicked.connect(lambda: (confirm(parent=self, message="Save changes?", action=lambda: save_data(items[0], get_struc(KEYS, layout, items[0]), "meta"), default="Yes"), self.updater()))
-            
-            scroll = QScrollArea()
-            scroll.setWidgetResizable(True)
-            scroll.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
-            scroll.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAsNeeded)
-            page = QWidget()
-            page.setLayout(ult)
-            page.setMaximumWidth(1500)
-            page.setSizePolicy(QSizePolicy.Policy.Maximum, QSizePolicy.Policy.Fixed)
-            scroll.setWidget(page)
-            return scroll
-
-        def exe(self):
-            items = load_data(["ui"])
-
-            ult = QVBoxLayout()
-            ult.setContentsMargins(0, 0, 0, 0)
-
-            button_row = QHBoxLayout()
-            button_row.setSpacing(0)
-            button_row.setContentsMargins(0, 0, 0, 0)
-            btn_exit = QPushButton("Exit")
-            btn_exit.clicked.connect(lambda: self.updater())
-            btn_exit.setFixedWidth(100)
-            button_row.addWidget(btn_exit)
-            btn_save = QPushButton("Save")
-            btn_save.setFixedWidth(100)
-            button_row.addWidget(btn_save)
-            button_row.setAlignment(Qt.AlignmentFlag.AlignLeft)
-            ult.addLayout(button_row)
-
-            layout = QGridLayout()
-            layout.setSpacing(50)
-            layout.setContentsMargins(10, 10, 10, 30) #links oben rechts unten
-            ult.addLayout(layout)
-
-            headings = [
-                "Game", "exesrc", "", "", "", "", ""
-            ]
-            for i, heading in enumerate(headings):
-                label = QLabel(heading)
-                bold = QFont()
-                bold.setBold(True)
-                label.setFont(bold)
-                label.setFixedHeight(30)
-                layout.addWidget(label, 0, i)
-
-            KEYS = (
-                [   "exesrc"   ],
-                [      ]
-            )
-
-            build_struc(KEYS, layout, items, "edit", self)
-
-            btn_save.clicked.connect(lambda: (confirm(parent=self, message="Save changes?", action=lambda: save_data(items[0], get_struc(KEYS, layout, items[0]), "ui"), default="Yes"), self.updater()))
-            
-            scroll = QScrollArea()
-            scroll.setWidgetResizable(True)
-            scroll.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
-            scroll.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAsNeeded)
-            page = QWidget()
-            page.setLayout(ult)
-            page.setMaximumWidth(1500)
-            page.setSizePolicy(QSizePolicy.Policy.Maximum, QSizePolicy.Policy.Fixed)
-            scroll.setWidget(page)
-            return scroll
-        
-        def updater(self):
-            self.close()
-            if type == "data": index = 1
-            elif type == "exe": index = 2
-            refresh_tab(window.tabs, index, getattr(window, type)())  # pyright: ignore[reportPossiblyUnboundVariable]
-
-    editor = Editor()
-    editor.show()
-
-
-def get_struc(keys: Tuple[list[str], list[str]], layout: QGridLayout, ref: Dict[str, Dict[str, Any]]) -> Dict[str, Dict[str, Any]]:
+def get_struc(keys: List[str], layout: QGridLayout, ref: Tuple[Dict[str, Dict[str, Any]], Dict[str, Dict[str, Any]]]) -> Dict[str, Dict[str, Any]]:
     n = 1
     out = {}
-    _keys = keys[0]
-    test = 1
-    for j in _keys:
-        if j == "build":
-            build_location = test
-        test += 1
-    for i in ref:
+    for i in ref[0]:
         out[i] = {}
         p = 1
-        for k in _keys:
+        for k in keys:
+            if k == "build":
+                build = layout.itemAtPosition(n, p).widget().text()  # type: ignore
             if k == "date":
-                out[i][k] = int(time.time())
+                if build == ref[1][i]["build"] or build == "":
+                    out[i][k] = int(time.time())
+                else:
+                    out[i][k] = ref[0][i]["date"]
             elif layout.itemAtPosition(n, p).widget().text() != "": out[i][k] = layout.itemAtPosition(n, p).widget().text()  # type: ignore
             p += 1
         n += 1
@@ -287,6 +129,31 @@ def build_struc(keys: Tuple[list[str], list[str]], layout: QGridLayout, files: T
                             label = QPushButton(files[para][i][k]) # pyright: ignore[reportOptionalSubscript]
                         except Exception: label = QPushButton(None)
                         label.clicked.connect(lambda checked, folder=i, l=label: pick_path(window, folder, l))
+                elif k == "png":
+                    if type == "show":
+                        label = QLabel()
+                        if os.path.exists(f"data/{i}.png"):
+                            pix = QPixmap("data/check_DATA.png").scaled(40, 40, Qt.AspectRatioMode.KeepAspectRatio, Qt.TransformationMode.SmoothTransformation)
+                        else:
+                            pix = QPixmap("data/x_DATA.png").scaled(40, 40, Qt.AspectRatioMode.KeepAspectRatio, Qt.TransformationMode.SmoothTransformation)
+                        label.setPixmap(pix)
+                    if type == "edit":
+                        label = QWidget()
+                        label.setContentsMargins(0, 0, 0, 0)
+                        label_layout = QHBoxLayout()
+                        if os.path.exists(f"data/{i}.png"):
+                            pix = QPixmap("data/check_DATA.png").scaled(40, 40, Qt.AspectRatioMode.KeepAspectRatio, Qt.TransformationMode.SmoothTransformation)
+                        else:
+                            pix = QPixmap("data/x_DATA.png").scaled(40, 40, Qt.AspectRatioMode.KeepAspectRatio, Qt.TransformationMode.SmoothTransformation)
+                        image = QLabel()
+                        image.setPixmap(pix)
+                        button = QPushButton("Change/Add")
+                        try:
+                            button.clicked.connect(lambda checked, game = i: Editor("exe", window).pick_img_view(game))
+                        except Exception: pass
+                        label_layout.addWidget(image)
+                        label_layout.addWidget(button)                  
+                        label.setLayout(label_layout)
                 else:
                     if type == "show":
                         try: label = QLabel(files[para][i][k]) # pyright: ignore[reportOptionalSubscript]
@@ -295,7 +162,7 @@ def build_struc(keys: Tuple[list[str], list[str]], layout: QGridLayout, files: T
                         try: label = QLineEdit(files[para][i][k]) # pyright: ignore[reportOptionalSubscript]
                         except Exception: label = QLineEdit(None)
                         label.setMaximumWidth(200)
-                label.setFixedHeight(40)
+                if not (k == "png" and type == "edit"): label.setFixedHeight(40)
                 layout.addWidget(label, n, p)
                 p += 1
             para += 1
@@ -319,15 +186,241 @@ def refresh_tab(tabs, index, tab):
     tabs.removeTab(index)
     tabs.insertTab(index, tab, name)
     tabs.setCurrentIndex(index)
+##windows
+
+def confirm(parent: QWidget, message: str, action, default):
+    msg_box = QMessageBox(parent)
+    msg_box.resize(400, 200)
+    msg_box.setWindowTitle("Confirm Action")
+    msg_box.setText(message)
+    msg_box.setIcon(QMessageBox.Icon.Question)
+    msg_box.setStandardButtons(QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No)
+    msg_box.setDefaultButton(getattr(QMessageBox.StandardButton, default))
+    
+    result = msg_box.exec()  # modal; waits for user
+    if result == QMessageBox.StandardButton.Yes:
+        action()
 
 
-class Window(QWidget):
+def pick_path(window, folder, label):
+    path, _ = QFileDialog.getOpenFileName(
+        window,
+        "Select EXE",
+        os.path.join(os.path.dirname(os.getcwd()), folder),
+        "Executable Files (*.exe);;All Files (*)"
+    )
+    if path:
+        label.setText(path)
+
+
+class WebCaptureView(QMainWindow):
+    url: str
+    game: str
+
+    def __init__(self, url, game, parent):
+        super().__init__(parent)
+        self.game = game
+        self.resize(1500, 900)
+        self.setWindowTitle("Select Image (Press Download)")
+        self.setWindowIcon(QIcon("data\\icon_DATA.png"))
+
+        self.viewer = QWebEngineView(self)
+        self.setCentralWidget(self.viewer)
+
+        self.page = QWebEnginePage(profile, self.viewer)
+        self.viewer.setPage(self.page)
+
+        QTimer.singleShot(0, lambda: self.viewer.load(QUrl(url)))
+
+    def handle_download(self, item):
+        url = item.url().toString().lower()
+        if not url.endswith(".png"):
+            return
+
+        path = f"data/{self.game}.png"
+        if os.path.exists(path):
+            os.remove(path)
+        item.accept()
+        item.setPath(os.path.abspath(path))
+
+    def updater(self):
+        self.hide()
+        refresh_tab(window.tabs, 2, getattr(window, "exe")())
+
+    #def manual_download_window(self):
+        #self.next = ManualDownloadWindow(self.game)
+        #self.next.show()
+
+    def closeEvent(self, event):
+        self.hide()
+        self.updater()
+        #self.manual_download_window()
+        event.accept()
+
+
+class Editor(QMainWindow):
+    type: str
+
+    def __init__(self, type, parent):
+        super().__init__(parent)
+        self.type = type
+        self.resize(1500, 900)
+        self.setWindowTitle("Version Checker v1 Editor")
+        self.setWindowIcon(QIcon("data\\icon_DATA.png"))
+        
+        self.setAttribute(Qt.WidgetAttribute.WA_DeleteOnClose, True)
+        self.editor = QWidget(self)
+        self.setCentralWidget(self.editor)
+
+        self.UI()
+
+    def UI(self):
+        mainlayout = QVBoxLayout()
+        mainlayout.setContentsMargins(0, 0, 0, 0)
+        mainlayout.addWidget(getattr(self, self.type)())
+        self.editor.setLayout(mainlayout)
+
+    def data(self):
+        items = load_data(["meta", "recent"])
+
+        ult = QVBoxLayout()
+        ult.setContentsMargins(0, 0, 0, 0)
+
+        button_row = QHBoxLayout()
+        button_row.setSpacing(0)
+        button_row.setContentsMargins(0, 0, 0, 0)
+        btn_exit = QPushButton("Exit")
+        btn_exit.clicked.connect(lambda: self.updater())
+        btn_exit.setFixedWidth(100)
+        button_row.addWidget(btn_exit)
+        btn_save = QPushButton("Save")
+        btn_save.setFixedWidth(100)
+        button_row.addWidget(btn_save)
+        button_row.setAlignment(Qt.AlignmentFlag.AlignLeft)
+        ult.addLayout(button_row)
+
+        layout = QGridLayout()
+        layout.setSpacing(50)
+        layout.setContentsMargins(10, 10, 10, 30) #links oben rechts unten
+        ult.addLayout(layout)
+
+        headings = [
+            "Game", "AppID", "Emulator", "Last Build", "Last Date", "Newest Build", "Newest Date"
+            ]
+        for i, heading in enumerate(headings):
+            label = QLabel(heading)
+            bold = QFont()
+            bold.setBold(True)
+            label.setFont(bold)
+            label.setFixedHeight(30)
+            layout.addWidget(label, 0, i)
+
+        KEYS = (
+            [   "appid", "emulator", "build", "date"   ],
+            [   "build", "date"   ]
+        )
+
+        build_struc(KEYS, layout, items, "edit", self)
+
+        btn_save.clicked.connect(lambda: (confirm(parent=self, message="Save changes?", action=lambda: save_data(items[0], get_struc(KEYS[0], layout, items), "meta"), default="Yes"), self.updater())) # pyright: ignore[reportArgumentType]
+        
+        scroll = QScrollArea()
+        scroll.setWidgetResizable(True)
+        scroll.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
+        scroll.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAsNeeded)
+        page = QWidget()
+        page.setLayout(ult)
+        page.setMaximumWidth(1500)
+        page.setSizePolicy(QSizePolicy.Policy.Maximum, QSizePolicy.Policy.Fixed)
+        scroll.setWidget(page)
+        return scroll
+
+    def exe(self):
+        items = load_data(["ui"])
+
+        ult = QVBoxLayout()
+        ult.setContentsMargins(0, 0, 0, 0)
+
+        button_row = QHBoxLayout()
+        button_row.setSpacing(0)
+        button_row.setContentsMargins(0, 0, 0, 0)
+        btn_exit = QPushButton("Exit")
+        btn_exit.clicked.connect(lambda: self.updater())
+        btn_exit.setFixedWidth(100)
+        button_row.addWidget(btn_exit)
+        btn_save = QPushButton("Save")
+        btn_save.setFixedWidth(100)
+        button_row.addWidget(btn_save)
+        button_row.setAlignment(Qt.AlignmentFlag.AlignLeft)
+        ult.addLayout(button_row)
+
+        layout = QGridLayout()
+        layout.setSpacing(50)
+        layout.setContentsMargins(10, 10, 10, 30) #links oben rechts unten
+        ult.addLayout(layout)
+
+        headings = [
+            "Game", "exesrc", "png", "", "", "", ""
+        ]
+        for i, heading in enumerate(headings):
+            label = QLabel(heading)
+            bold = QFont()
+            bold.setBold(True)
+            label.setFont(bold)
+            label.setFixedHeight(30)
+            layout.addWidget(label, 0, i)
+
+        KEYS = (
+            [   "exesrc", "png"   ],
+            [      ]
+        )
+
+        build_struc(KEYS, layout, items, "edit", self)
+
+        btn_save.clicked.connect(lambda: (confirm(parent=self, message="Save changes?", action=lambda: save_data(items[0], get_struc(KEYS[0], layout, items), "ui"), default="Yes"), self.updater())) # pyright: ignore[reportArgumentType]
+        
+        scroll = QScrollArea()
+        scroll.setWidgetResizable(True)
+        scroll.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
+        scroll.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAsNeeded)
+        page = QWidget()
+        page.setLayout(ult)
+        page.setMaximumWidth(1500)
+        page.setSizePolicy(QSizePolicy.Policy.Maximum, QSizePolicy.Policy.Fixed)
+        scroll.setWidget(page)
+        return scroll
+    
+    def updater(self):
+        self.close()
+        if self.type == "data": index = 1
+        elif self.type == "exe": index = 2
+        refresh_tab(window.tabs, index, getattr(window, self.type)())  # pyright: ignore[reportPossiblyUnboundVariable]
+
+    def pick_img_view(self, game):
+        game_parts = re.split(" ", game)
+        game_url = ""
+        for i in game_parts:
+            game_url += i + "+"
+        game_url = game_url[:-1]
+        url = f"https://www.steamgriddb.com/search/grids?term={game_url}"
+        self.viewer = WebCaptureView(url, game, self)
+        self.viewer.setWindowModality(Qt.WindowModality.NonModal)
+        self.viewer.show()
+
+    def closeEvent(self, event):
+        self.updater()
+        event.accept()
+##main
+
+class Window(QMainWindow):
 
     def __init__(self):
         super().__init__()
         self.resize(1500, 900)
         self.setWindowTitle("Version Checker v1")
         self.setWindowIcon(QIcon("data\\icon_DATA.png"))
+        self.main_window = QWidget(self)
+        self.setCentralWidget(self.main_window)
         self.UI()
 
     def UI(self):
@@ -339,7 +432,7 @@ class Window(QWidget):
         mainlayout = QVBoxLayout()
         mainlayout.setContentsMargins(0, 0, 0, 0)
         mainlayout.addWidget(self.tabs)
-        self.setLayout(mainlayout)
+        self.main_window.setLayout(mainlayout)
 
     def data(self):
         items = load_data(["meta", "recent"])
@@ -350,7 +443,7 @@ class Window(QWidget):
         button_row = QHBoxLayout()
         button_row.setSpacing(0)
         btn_edit = QPushButton("Edit")
-        btn_edit.clicked.connect(lambda: make_editor("data"))
+        btn_edit.clicked.connect(lambda: self.make_editor("data"))
         btn_edit.setFixedWidth(100)
         button_row.addWidget(btn_edit)
         btn_refresh = QPushButton("Refresh")
@@ -378,7 +471,7 @@ class Window(QWidget):
         ult.addLayout(layout)
 
         headings = [
-            "Game", "AppID", "Emulator", "Last Date", "Last Build", "Newest Build", "Newest Date"
+            "Game", "AppID", "Emulator", "Last Build", "Last Date", "Newest Build", "Newest Date"
             ]
         for i, heading in enumerate(headings):
             label = QLabel(heading)
@@ -389,7 +482,7 @@ class Window(QWidget):
             layout.addWidget(label, 0, i)
 
         KEYS = (
-            [   "appid", "emulator", "date", "build"   ],
+            [   "appid", "emulator", "build", "date"   ],
             [   "build", "date"   ]
         )
 
@@ -487,7 +580,7 @@ class Window(QWidget):
         button_row.setSpacing(0)
         button_row.setContentsMargins(0, 0, 0, 0)
         btn_edit = QPushButton("Edit")
-        btn_edit.clicked.connect(lambda: make_editor("exe"))
+        btn_edit.clicked.connect(lambda: self.make_editor("exe"))
         btn_edit.setFixedWidth(100)
         button_row.addWidget(btn_edit)
         btn_refresh = QPushButton("Refresh")
@@ -503,7 +596,7 @@ class Window(QWidget):
         ult.addLayout(layout)
 
         headings = [
-            "Game", "exesrc", "", "", "", "", ""
+            "Game", "exesrc", "png", "", "", "", ""
         ]
         for i, heading in enumerate(headings):
             label = QLabel(heading)
@@ -514,7 +607,7 @@ class Window(QWidget):
             layout.addWidget(label, 0, i)
 
         KEYS = (
-            [   "exesrc"   ],
+            [   "exesrc", "png"   ],
             [      ]
         )
 
@@ -531,6 +624,10 @@ class Window(QWidget):
         scroll.setWidget(page)
         return scroll
 
+    def make_editor(self, type):
+        self.editor = Editor(type, self)
+        self.editor.show()
+##execution
 
 if __name__ == "__main__":
 
@@ -545,8 +642,23 @@ if __name__ == "__main__":
         web.main()
     if not os.path.exists(args.uidata):
         create_ui(None)
-        
+
     app = QApplication(sys.argv)
+
+    profile = QWebEngineProfile("main")
+    # profile.setPersistentStoragePath("web/web_profile")
+    # profile.setCachePath("web/web_cache")
+    profile.setHttpCacheType(QWebEngineProfile.HttpCacheType.MemoryHttpCache)
+    profile.setPersistentCookiesPolicy(QWebEngineProfile.PersistentCookiesPolicy.NoPersistentCookies)
+    profile.setHttpUserAgent(
+    "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
+    "AppleWebKit/537.36 (KHTML, like Gecko) "
+    "Chrome/120.0.0.0 Safari/537.36")
+
     window = Window()
     window.show()
     sys.exit(app.exec())
+
+
+##TODO:
+#get the working downloader done as by agent
