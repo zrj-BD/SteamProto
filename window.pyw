@@ -15,18 +15,18 @@ from datetime import datetime
 import subprocess
 import time
 import re
+import requests
 # programs
 import web
 import remover
 import main
-# gottverdammte 3 stunden gewastet weil ich vergessen habe recents.json zu checken und das ding einfach nicht den eintrag hat bro
-# eigenständig erarbeitet ohne QT wissen und ohne irgendein programmierwissen diesen wunderschönen grid bauer errichtet
 # bro im extremely proud of you man, you did all this shit (an application) without even any knowledge of the thing. i mean you learned entirely how to build the window, read json, write json, scan, etc all of that which you didnt know. i mean DAMN 430 lines?? all yourself? and it actually is functional and works? crazy shit
 ##file locations
-METADATA_DEFAULT = os.path.join(os.path.dirname(os.getcwd()), "_metadata", "metadata.json")
-RECENTS_FILE_DEFAULT = os.path.join(os.path.dirname(os.getcwd()), "_metadata", "recents.json")
-UI_FILE_DEFAULT = os.path.join(os.path.dirname(os.getcwd()), "_metadata", "ui.json")
-##loading data
+META_DEFAULT = os.path.join(os.getcwd(), "_metadata")
+METADATA_DEFAULT = os.path.join(META_DEFAULT, "metadata.json")
+RECENTS_FILE_DEFAULT = os.path.join(META_DEFAULT, "recents.json")
+UI_FILE_DEFAULT = os.path.join(META_DEFAULT, "ui.json")
+###loading data
 
 def load_data(files) -> Tuple[Dict[str, Dict[str, Any]], Optional[Dict[str, Dict[str, Any]]]]:
     """
@@ -63,9 +63,6 @@ def save_data(og, data, file):
 
 def create_ui(ui: Optional[Dict[str, Dict[str, Any]]]):
     if ui == None: ui = {}
-    names = load_data(["meta"])[0]
-    for i in names:
-        ui[i] = {"imagesrc": f"data//{i}.png"}
     with open(args.uidata, "w", encoding="utf-8") as fh:
         json.dump(ui, fh, indent=2, ensure_ascii=True)
 ##running files
@@ -132,19 +129,19 @@ def build_struc(keys: Tuple[list[str], list[str]], layout: QGridLayout, files: T
                 elif k == "png":
                     if type == "show":
                         label = QLabel()
-                        if os.path.exists(f"data/{i}.png"):
-                            pix = QPixmap("data/check_DATA.png").scaled(40, 40, Qt.AspectRatioMode.KeepAspectRatio, Qt.TransformationMode.SmoothTransformation)
+                        if os.path.exists(f"data/imgs/{i}.png"):
+                            pix = QPixmap("data/local/check_DATA.png").scaled(40, 40, Qt.AspectRatioMode.KeepAspectRatio, Qt.TransformationMode.SmoothTransformation)
                         else:
-                            pix = QPixmap("data/x_DATA.png").scaled(40, 40, Qt.AspectRatioMode.KeepAspectRatio, Qt.TransformationMode.SmoothTransformation)
+                            pix = QPixmap("data/local/x_DATA.png").scaled(40, 40, Qt.AspectRatioMode.KeepAspectRatio, Qt.TransformationMode.SmoothTransformation)
                         label.setPixmap(pix)
                     if type == "edit":
                         label = QWidget()
                         label.setContentsMargins(0, 0, 0, 0)
                         label_layout = QHBoxLayout()
-                        if os.path.exists(f"data/{i}.png"):
-                            pix = QPixmap("data/check_DATA.png").scaled(40, 40, Qt.AspectRatioMode.KeepAspectRatio, Qt.TransformationMode.SmoothTransformation)
+                        if os.path.exists(f"data/imgs/{i}.png"):
+                            pix = QPixmap("data/local/check_DATA.png").scaled(40, 40, Qt.AspectRatioMode.KeepAspectRatio, Qt.TransformationMode.SmoothTransformation)
                         else:
-                            pix = QPixmap("data/x_DATA.png").scaled(40, 40, Qt.AspectRatioMode.KeepAspectRatio, Qt.TransformationMode.SmoothTransformation)
+                            pix = QPixmap("data/local/x_DATA.png").scaled(40, 40, Qt.AspectRatioMode.KeepAspectRatio, Qt.TransformationMode.SmoothTransformation)
                         image = QLabel()
                         image.setPixmap(pix)
                         button = QPushButton("Change/Add")
@@ -171,9 +168,9 @@ def build_struc(keys: Tuple[list[str], list[str]], layout: QGridLayout, files: T
                 length = len(_keys[0]) + len(_keys[1]) + 1 # pyright: ignore[reportPossiblyUnboundVariable]
                 try:
                     if files[0][i]["build"] == files[1][i]["build"]: # pyright: ignore[reportOptionalSubscript]
-                        pix = QPixmap("data/check_DATA.png").scaled(40, 40, Qt.AspectRatioMode.KeepAspectRatio, Qt.TransformationMode.SmoothTransformation)
+                        pix = QPixmap("data/local/check_DATA.png").scaled(40, 40, Qt.AspectRatioMode.KeepAspectRatio, Qt.TransformationMode.SmoothTransformation)
                     else:
-                        pix = QPixmap("data/x_DATA.png").scaled(40, 40, Qt.AspectRatioMode.KeepAspectRatio, Qt.TransformationMode.SmoothTransformation)
+                        pix = QPixmap("data/local/x_DATA.png").scaled(40, 40, Qt.AspectRatioMode.KeepAspectRatio, Qt.TransformationMode.SmoothTransformation)
                     status.setPixmap(pix)
                 except Exception: pass
                 layout.addWidget(status, n, length)
@@ -213,6 +210,61 @@ def pick_path(window, folder, label):
         label.setText(path)
 
 
+class ManualDownloadWindow(QMainWindow):
+    game: str
+    
+    def __init__(self, game, parent):
+        super().__init__(parent)
+        self.game = game
+        self.resize(300, 200)
+        self.setWindowTitle("Paste Image Address")
+        self.setWindowIcon(QIcon("data\\local\\icon_DATA.png"))
+
+        self.setAttribute(Qt.WidgetAttribute.WA_DeleteOnClose, True)
+        self.enterer = QWidget(self)
+        self.setCentralWidget(self.enterer)
+
+        self.UI()
+
+    def UI(self):
+        mainlayout = QVBoxLayout(self.enterer)
+        mainlayout.setContentsMargins(10, 10, 10, 10)
+        
+        self.d_button = QPushButton("Download")
+        self.address_field = QLineEdit()
+
+        mainlayout.addWidget(self.address_field)
+        mainlayout.addWidget(self.d_button)
+
+        self.d_button.clicked.connect(self.download)
+
+        self.enterer.setLayout(mainlayout)
+
+    def download(self):
+        url = self.address_field.text().strip()
+        if not url.lower().endswith(".png") and not url.lower().endswith(".jpg"):
+            return
+        
+        path = f"data/imgs/{self.game}.png"
+        if os.path.exists(path):
+            os.remove(path)
+        r = requests.get(url, timeout=15)
+        r.raise_for_status()
+
+        with open(path, "wb") as f:
+            f.write(r.content)
+
+        self.close()
+
+    def updater(self):
+        refresh_tab(window.tabs, 2, getattr(window, "exe")())
+        refresh_tab(window.tabs, 0, getattr(window, "library")())
+
+    def closeEvent(self, event):
+        self.updater()
+        event.accept()
+
+
 class WebCaptureView(QMainWindow):
     url: str
     game: str
@@ -220,9 +272,10 @@ class WebCaptureView(QMainWindow):
     def __init__(self, url, game, parent):
         super().__init__(parent)
         self.game = game
+        self.parent1 = parent
         self.resize(1500, 900)
-        self.setWindowTitle("Select Image (Press Download)")
-        self.setWindowIcon(QIcon("data\\icon_DATA.png"))
+        self.setWindowTitle("Copy Image Address")
+        self.setWindowIcon(QIcon("data\\local\\icon_DATA.png"))
 
         self.viewer = QWebEngineView(self)
         self.setCentralWidget(self.viewer)
@@ -232,30 +285,13 @@ class WebCaptureView(QMainWindow):
 
         QTimer.singleShot(0, lambda: self.viewer.load(QUrl(url)))
 
-    def handle_download(self, item):
-        url = item.url().toString().lower()
-        if not url.endswith(".png"):
-            return
-
-        path = f"data/{self.game}.png"
-        if os.path.exists(path):
-            os.remove(path)
-        item.accept()
-        item.setPath(os.path.abspath(path))
-
-    def updater(self):
-        self.hide()
-        refresh_tab(window.tabs, 2, getattr(window, "exe")())
-
-    #def manual_download_window(self):
-        #self.next = ManualDownloadWindow(self.game)
-        #self.next.show()
+    def manual_download_window(self):
+        self.next = ManualDownloadWindow(self.game, self.parent1)
+        self.next.show()
 
     def closeEvent(self, event):
         self.hide()
-        self.updater()
-        #self.manual_download_window()
-        event.accept()
+        self.manual_download_window()
 
 
 class Editor(QMainWindow):
@@ -266,7 +302,7 @@ class Editor(QMainWindow):
         self.type = type
         self.resize(1500, 900)
         self.setWindowTitle("Version Checker v1 Editor")
-        self.setWindowIcon(QIcon("data\\icon_DATA.png"))
+        self.setWindowIcon(QIcon("data\\local\\icon_DATA.png"))
         
         self.setAttribute(Qt.WidgetAttribute.WA_DeleteOnClose, True)
         self.editor = QWidget(self)
@@ -418,7 +454,7 @@ class Window(QMainWindow):
         super().__init__()
         self.resize(1500, 900)
         self.setWindowTitle("Version Checker v1")
-        self.setWindowIcon(QIcon("data\\icon_DATA.png"))
+        self.setWindowIcon(QIcon("data\\local\\icon_DATA.png"))
         self.main_window = QWidget(self)
         self.setCentralWidget(self.main_window)
         self.UI()
@@ -525,7 +561,7 @@ class Window(QMainWindow):
             container = QWidget()
             #container.setStyleSheet("border: 2px solid black; background-color: lightgray;")
             image_l = QLabel(container)
-            image = QPixmap(games[i]["imagesrc"])
+            image = QPixmap(f"data/imgs/{i}.png")
             image = image.scaled(250, 375, Qt.AspectRatioMode.KeepAspectRatioByExpanding, Qt.TransformationMode.SmoothTransformation)
             image_l.setPixmap(image)
             image_l.setGeometry(0, 0, 250, 375)
@@ -637,7 +673,7 @@ if __name__ == "__main__":
     p.add_argument("--uidata", "-ui", default=UI_FILE_DEFAULT, help="Path to UI JSON")
     args = p.parse_args()
     #falesafe for first start and if file gets lost
-    if not os.path.exists(os.path.join(os.path.dirname(os.getcwd()), "_metadata")) or not os.path.exists(os.path.join(os.path.dirname(os.getcwd()), "_metadata", "metadata.json")):
+    if not os.path.exists(args.metadata):
         main.main()
         web.main()
     if not os.path.exists(args.uidata):
@@ -661,4 +697,7 @@ if __name__ == "__main__":
 
 
 ##TODO:
-#get the working downloader done as by agent
+#library functions:
+#search function
+#favourites function
+#sort function

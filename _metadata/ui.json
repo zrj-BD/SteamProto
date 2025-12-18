@@ -1,0 +1,50 @@
+{
+  "5D Chess With Multiverse Time Travel": {
+    "imagesrc": "data//5D Chess With Multiverse Time Travel.png",
+    "exesrc": "D:/Games/5D Chess With Multiverse Time Travel/5dchesswithmultiversetimetravel.exe"
+  },
+  "Baldur's Gate 3": {
+    "imagesrc": "data//Baldur's Gate 3.png",
+    "exesrc": "D:/Games/Baldur's Gate 3/Baldurs Gate 3/bin/bg3.exe"
+  },
+  "Dave the Diver": {
+    "imagesrc": "data//Dave the Diver.png",
+    "exesrc": "D:/Games/Dave the Diver/DaveTheDiver.exe"
+  },
+  "Opus Magnum": {
+    "imagesrc": "data//Opus Magnum.png",
+    "exesrc": "D:/Games/Opus Magnum/Lightning.exe"
+  },
+  "Slay The Princess": {
+    "imagesrc": "data//Slay The Princess.png",
+    "exesrc": "D:/Games/Slay The Princess/SlaythePrincess.exe"
+  },
+  "The Coffin of Andy and Leyley": {
+    "imagesrc": "data//The Coffin of Andy and Leyley.png",
+    "exesrc": "D:\\Games\\The Coffin of Andy and Leyley\\Game.exe"
+  },
+  "The Farmer Was Replaced": {
+    "imagesrc": "data//The Farmer Was Replaced.png",
+    "exesrc": "D:/Games/The Farmer Was Replaced/TheFarmerWasReplaced.exe"
+  },
+  "Victoria 3": {
+    "imagesrc": "data//Victoria 3.png",
+    "exesrc": "D:/Games/Victoria 3/binaries/victoria3.exe"
+  },
+  "WorldBox": {
+    "imagesrc": "data//WorldBox.png",
+    "exesrc": "D:/Games/WorldBox/steamapps/common/worldbox/worldbox.exe"
+  },
+  "Zero Escape - The Nonary Games": {
+    "imagesrc": "data//Zero Escape - The Nonary Games.png",
+    "exesrc": "D:/Games/Zero Escape - The Nonary Games/Launcher.exe"
+  },
+  "Crusader Kings III": {
+    "imagesrc": "data//Crusader Kings III.png",
+    "exesrc": "D:/Games/Crusader Kings III/Crusader Kings III/binaries/ck3.exe"
+  },
+  "Geometry Dash": {
+    "imagesrc": "data//Geometry Dash.png",
+    "exesrc": "D:/Games/Geometry Dash/Geometry Dash/GeometryDash.exe"
+  }
+}

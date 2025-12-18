@@ -5,8 +5,8 @@ import re
 import subprocess
 from typing import Dict, Any, List
 
-METADATA_DEFAULT = os.path.join(os.path.dirname(os.getcwd()), "_metadata", "metadata.json")
-OUT_FILE_DEFAULT = os.path.join(os.path.dirname(os.getcwd()), "_metadata", "recents.json")
+METADATA_DEFAULT = os.path.join(os.getcwd(), "_metadata", "metadata.json")
+OUT_FILE_DEFAULT = os.path.join(os.getcwd(), "_metadata", "recents.json")
 STEAMCMD_PATH = "C:\\steamcmd\\steamcmd.exe"
 
 def load_metadata(path: str) -> Dict[str, Dict[str, Any]]:

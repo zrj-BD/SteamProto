@@ -310,7 +310,7 @@ def main():
     parser = argparse.ArgumentParser(description="Scan folders, extract folder-level metadata and write two JSONs.")
     parser.add_argument("-d", "--dir", required=False, help="Base directory to scan (default: parent dir)")
     parser.add_argument("-c", "--config", help="Optional JSON config to override mappings")
-    parser.add_argument("-o", "--out", help="Output folder for metadata (default: <dir>/_metadata/)")
+    parser.add_argument("-o", "--out", help="Output folder for metadata (default: _metadata/)")
     parser.add_argument("--force", action="store_true", help="Rescan all folders (ignore markers)")
     parser.add_argument("--marker-name", default=".processed_marker.txt", help="Marker filename placed in processed folders")
     parser.add_argument("--marker-code", default="###99999###", help="Content written into marker file")
@@ -320,7 +320,7 @@ def main():
     cfg = load_config(args.config) if args.config else {}
     content_maps, filename_maps, extension_maps, searchable_exts = compile_mappings(cfg)
 
-    meta_dir = args.out if args.out else os.path.join(base, "_metadata")
+    meta_dir = args.out if args.out else os.path.abspath("_metadata")
     program_dir = normalize_path(os.path.dirname(__file__))
     existing_meta1, existing_meta2 = load_existing_metadatas(meta_dir)
 
