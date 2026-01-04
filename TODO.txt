@@ -10,3 +10,5 @@ DONE - Add Integration to get images
 - game metadata advanced, sort by filters, acquire on web?
 - EXE package
 - architecture
+DONE - settings via config.json
+- application design template, possibly QML template later on

@@ -1,17 +1,18 @@
 ##Imports
 # PyQt6
-from PyQt6.QtWidgets import QMainWindow, QFileDialog, QSizePolicy, QHBoxLayout, QApplication, QVBoxLayout, QWidget, QLabel, QPushButton, QGridLayout, QTabWidget, QScrollArea, QLineEdit, QMessageBox
+from PyQt6.QtWidgets import QLayout, QMainWindow, QFileDialog, QSizePolicy, QHBoxLayout, QApplication, QVBoxLayout, QWidget, QLabel, QPushButton, QGridLayout, QTabWidget, QScrollArea, QLineEdit, QMessageBox, QComboBox
 from PyQt6.QtGui import QIcon, QFont, QPixmap
 from PyQt6.QtCore import Qt, QUrl, QTimer
 from PyQt6.QtWebEngineWidgets import QWebEngineView
 from PyQt6.QtWebEngineCore import QWebEngineProfile, QWebEnginePage, QWebEngineUrlRequestInterceptor
+from PyQt6_SwitchControl import SwitchControl
 # random
 import sys
 import json
 import os
 from typing import Dict, Any, List, Tuple, Optional
 import argparse
-from datetime import datetime
+from datetime import datetime, date
 import subprocess
 import time
 import re
@@ -20,31 +21,35 @@ import requests
 import web
 import remover
 import main
-# bro im extremely proud of you man, you did all this shit (an application) without even any knowledge of the thing. i mean you learned entirely how to build the window, read json, write json, scan, etc all of that which you didnt know. i mean DAMN 430 lines?? all yourself? and it actually is functional and works? crazy shit
-##file locations
+## constants
+
 META_DEFAULT = os.path.join(os.getcwd(), "_metadata")
 METADATA_DEFAULT = os.path.join(META_DEFAULT, "metadata.json")
 RECENTS_FILE_DEFAULT = os.path.join(META_DEFAULT, "recents.json")
 UI_FILE_DEFAULT = os.path.join(META_DEFAULT, "ui.json")
-###loading data
+SETTINGS_FILE_DEFAULT = os.path.join(META_DEFAULT, "settings.json")
+STATE_FILE_DEFAULT = os.path.join(META_DEFAULT, "state.json")
 
-def load_data(files) -> Tuple[Dict[str, Dict[str, Any]], Optional[Dict[str, Dict[str, Any]]]]:
+APPLICATION_NAME = "Steam Proto v1.0a"
+## loading data
+
+def load_data(files) -> Tuple[Dict[str, Dict[str,Any]], Optional[Dict[str, Dict[str, Any]]]]:
     """
-    Load both files and return dicts.
+    Load files and return dicts.
     """
-    list = []
-    for i in files:
-        data: Dict[str, Any]
-        data = {}
-        path = getattr(args, f"{i}data")
+    result = []
+    for file_key in files:
+        data: Dict[str, Any] = {}
+        path = getattr(args, f"{file_key}data")
         if os.path.exists(path):
             try:
                 with open(path, "r", encoding="utf-8") as fh:
                     data = json.load(fh)
-            except Exception:
+            except (json.JSONDecodeError, IOError, OSError):
+                # Silently fail and use empty dict
                 pass
-        list.append(data)
-    return tuple(list)
+        result.append(data)
+    return tuple(result)
 
 
 def save_data(og, data, file):
@@ -61,11 +66,11 @@ def save_data(og, data, file):
         json.dump(write, fh, indent=2, ensure_ascii=True)
 
 
-def create_ui(ui: Optional[Dict[str, Dict[str, Any]]]):
-    if ui == None: ui = {}
-    with open(args.uidata, "w", encoding="utf-8") as fh:
-        json.dump(ui, fh, indent=2, ensure_ascii=True)
-##running files
+def create_blank(loc: str):
+    with open(loc, "w", encoding="utf-8") as fh:
+        json.dump({}, fh, indent=2, ensure_ascii=True)
+    
+## running files
 
 def run_exe(exe: str):
     try: 
@@ -73,7 +78,7 @@ def run_exe(exe: str):
         window.close()
     except Exception:
         print("Error running exe")
-##struc build
+## struc build
 
 def get_struc(keys: List[str], layout: QGridLayout, ref: Tuple[Dict[str, Dict[str, Any]], Dict[str, Dict[str, Any]]]) -> Dict[str, Dict[str, Any]]:
     n = 1
@@ -89,6 +94,8 @@ def get_struc(keys: List[str], layout: QGridLayout, ref: Tuple[Dict[str, Dict[st
                     out[i][k] = int(time.time())
                 else:
                     out[i][k] = ref[0][i]["date"]
+            elif k == "png":
+                continue
             elif layout.itemAtPosition(n, p).widget().text() != "": out[i][k] = layout.itemAtPosition(n, p).widget().text()  # type: ignore
             p += 1
         n += 1
@@ -178,12 +185,14 @@ def build_struc(keys: Tuple[list[str], list[str]], layout: QGridLayout, files: T
         n += 1
 
 
-def refresh_tab(tabs, index, tab):
+def refresh_tab(tabs: QTabWidget, index, tab):
+    current = tabs.currentIndex()
     name = tabs.tabText(index)
     tabs.removeTab(index)
     tabs.insertTab(index, tab, name)
-    tabs.setCurrentIndex(index)
-##windows
+    if current == index:
+        tabs.setCurrentIndex(index)
+## windows
 
 def confirm(parent: QWidget, message: str, action, default):
     msg_box = QMessageBox(parent)
@@ -208,6 +217,172 @@ def pick_path(window, folder, label):
     )
     if path:
         label.setText(path)
+
+
+class Settings(QMainWindow):
+    
+    def __init__(self, parent):
+        super().__init__(parent)
+        self.resize(1500, 900)
+        self.setWindowTitle(f"{APPLICATION_NAME} Settings")
+        self.setWindowIcon(QIcon("data\\local\\icon_DATA.png"))
+        
+        self.setAttribute(Qt.WidgetAttribute.WA_DeleteOnClose, True)
+        # Dictionary to store widget references by setting key
+        self.settings_widgets: Dict[str, Any] = {}
+        # Store loaded settings data for saving
+        self.loaded_settings_data = {}
+        
+        self.main_window = self.settings()
+        self.setCentralWidget(self.main_window)
+
+    # Settings configuration
+    SETTINGS_CONFIG = [
+        {"key": "automatic_scans", "type": "toggle", "label": "Automatic Scans", "default": False},
+        {"key": "scan_frequency", "type": "select", "label": "Scan Frequency", "default": "weekly", "options": ["daily", "weekly", "biweekly", "monthly"]},
+        {"key": "design", "type": "toggle", "label": "Design", "default": False},
+        # {"key": "theme_name", "type": "text", "label": "Theme Name", "default": ""},
+    ]
+
+    def settings(self):
+        # Load current settings from JSON
+        settings_data = load_data(["settings"])[0]
+        self.loaded_settings_data = settings_data
+
+        ult = QVBoxLayout()
+        ult.setContentsMargins(0, 0, 0, 0)
+        ult.setSpacing(0)
+        ult.setAlignment(Qt.AlignmentFlag.AlignTop)
+
+        button_row = QHBoxLayout()
+        button_row.setContentsMargins(0, 0, 0, 0)
+        btn_exit = QPushButton("Exit")
+        btn_exit.clicked.connect(lambda: self.updater())
+        btn_exit.setFixedWidth(100)
+        button_row.addWidget(btn_exit)
+        btn_save = QPushButton("Save")
+        btn_save.setFixedWidth(100)
+        button_row.addWidget(btn_save)
+        button_row.setAlignment(Qt.AlignmentFlag.AlignLeft)
+        ult.addLayout(button_row)
+
+        layout = QGridLayout()
+        layout.setSpacing(50)
+        layout.setContentsMargins(10, 10, 10, 30) #links oben rechts unten
+        ult.addLayout(layout)
+
+        # Cache bold font to avoid recreating it in loop
+        bold_font = QFont()
+        bold_font.setBold(True)
+        
+        # Dynamically generate UI based on SETTINGS_CONFIG
+        for row, setting_config in enumerate(self.SETTINGS_CONFIG):
+            key = setting_config["key"]
+            label_text = setting_config["label"]
+            setting_type = setting_config["type"]
+            default_value = setting_config.get("default", False if setting_type == "toggle" else "")
+            
+            # Get current value from loaded settings, or use default
+            current_value = settings_data.get(key, default_value)
+            
+            # Create label
+            label = QLabel(label_text)
+            label.setFont(bold_font)
+            label.setFixedSize(200, 50)
+            layout.addWidget(label, row, 0)
+            
+            # Create widget based on type
+            if setting_type == "toggle":
+                is_checked = bool(current_value)
+                widget = SwitchControl(checked = is_checked)
+                
+                if key == "design":
+                    # Light mode (True): lighter colors with gold circle
+                    # Dark mode (False): darker colors with dark circle
+                    widget.set_bg_color("#E0E0E0")  # Light gray background
+                    widget.set_active_color("#F5F5F5")  # Very light gray when active (light mode)
+                    widget.set_circle_color("#FFD700" if is_checked else "#4A4A4A")  # Gold for light mode, dark gray for dark mode
+                else:
+                    # Standard toggle colors
+                    widget.set_bg_color("#414241")
+                    widget.set_active_color("#515251")
+                    widget.set_circle_color("#34b233" if is_checked else "#aa2626")  # Green for on, red for off
+                
+                widget.toggled.connect(lambda state, w=widget, k=key: self.on_toggle(state, w, k))
+                layout.addWidget(widget, row, 3)
+                
+            elif setting_type == "text":
+                widget = QLineEdit()
+                widget.setText(str(current_value) if current_value is not None else "")
+                widget.setMaximumWidth(200)
+                widget.setFixedHeight(40)
+                layout.addWidget(widget, row, 3)
+                
+            elif setting_type == "select":
+                widget = QComboBox()
+                options = setting_config.get("options", [])
+                widget.addItems(options)
+                # Set current value if it exists in options, otherwise use default
+                current_str = str(current_value) if current_value is not None else str(default_value)
+                if current_str in options:
+                    widget.setCurrentText(current_str)
+                else:
+                    widget.setCurrentText(str(default_value))
+                widget.setMaximumWidth(200)
+                widget.setFixedHeight(40)
+                layout.addWidget(widget, row, 3)
+            
+            # Store widget reference
+            self.settings_widgets[key] = widget
+
+        # Connect save button
+        btn_save.clicked.connect(lambda: (confirm(parent=self, message="Save changes?", action=lambda: save_data(self.loaded_settings_data, self.read_settings(), "settings"), default="Yes"), self.updater())) # pyright: ignore[reportArgumentType]
+        
+        page = QWidget()
+        page.setLayout(ult)
+        page.setMaximumWidth(1500)
+        page.setSizePolicy(QSizePolicy.Policy.Maximum, QSizePolicy.Policy.Fixed)
+        return page
+    
+    def on_toggle(self, state: bool, button: SwitchControl, key: str):
+        """Handler for toggle button state changes"""
+        if key == "design":
+            # Light mode: gold, Dark mode: dark gray
+            button.set_circle_color("#FFD700" if state else "#4A4A4A")
+        else:
+            # Green for on, red for off
+            button.set_circle_color("#34b233" if state else "#aa2626")
+    
+    def updater(self):
+        self.close()
+        refresh_tab(window.tabs, 0, getattr(window, "library")())  # pyright: ignore[reportPossiblyUnboundVariable]
+
+    def closeEvent(self, event):
+        self.updater()
+        event.accept()
+
+    def read_settings(self) -> Dict[str, Any]:
+        """
+        Read current values from all settings widgets and return as dictionary.
+        Toggle buttons return booleans, text fields return strings, select widgets return strings.
+        """
+        settings_dict = {}
+        for setting_config in self.SETTINGS_CONFIG:
+            key = setting_config["key"]
+            setting_type = setting_config["type"]
+            widget = self.settings_widgets.get(key)
+            
+            if widget is None:
+                continue
+                
+            if setting_type == "toggle":
+                settings_dict[key] = bool(widget.isChecked())
+            elif setting_type == "text":
+                settings_dict[key] = str(widget.text())
+            elif setting_type == "select":
+                settings_dict[key] = str(widget.currentText())
+        
+        return settings_dict
 
 
 class ManualDownloadWindow(QMainWindow):
@@ -301,7 +476,7 @@ class Editor(QMainWindow):
         super().__init__(parent)
         self.type = type
         self.resize(1500, 900)
-        self.setWindowTitle("Version Checker v1 Editor")
+        self.setWindowTitle(f"{APPLICATION_NAME} Editor")
         self.setWindowIcon(QIcon("data\\local\\icon_DATA.png"))
         
         self.setAttribute(Qt.WidgetAttribute.WA_DeleteOnClose, True)
@@ -340,14 +515,16 @@ class Editor(QMainWindow):
         layout.setContentsMargins(10, 10, 10, 30) #links oben rechts unten
         ult.addLayout(layout)
 
+        # Cache bold font for headings
+        heading_font_edit = QFont()
+        heading_font_edit.setBold(True)
+        
         headings = [
             "Game", "AppID", "Emulator", "Last Build", "Last Date", "Newest Build", "Newest Date"
             ]
         for i, heading in enumerate(headings):
             label = QLabel(heading)
-            bold = QFont()
-            bold.setBold(True)
-            label.setFont(bold)
+            label.setFont(heading_font_edit)
             label.setFixedHeight(30)
             layout.addWidget(label, 0, i)
 
@@ -395,14 +572,16 @@ class Editor(QMainWindow):
         layout.setContentsMargins(10, 10, 10, 30) #links oben rechts unten
         ult.addLayout(layout)
 
+        # Cache bold font for headings
+        heading_font_exe = QFont()
+        heading_font_exe.setBold(True)
+        
         headings = [
             "Game", "exesrc", "png", "", "", "", ""
         ]
         for i, heading in enumerate(headings):
             label = QLabel(heading)
-            bold = QFont()
-            bold.setBold(True)
-            label.setFont(bold)
+            label.setFont(heading_font_exe)
             label.setFixedHeight(30)
             layout.addWidget(label, 0, i)
 
@@ -446,14 +625,14 @@ class Editor(QMainWindow):
     def closeEvent(self, event):
         self.updater()
         event.accept()
-##main
+## main
 
 class Window(QMainWindow):
 
     def __init__(self):
         super().__init__()
         self.resize(1500, 900)
-        self.setWindowTitle("Version Checker v1")
+        self.setWindowTitle(APPLICATION_NAME)
         self.setWindowIcon(QIcon("data\\local\\icon_DATA.png"))
         self.main_window = QWidget(self)
         self.setCentralWidget(self.main_window)
@@ -547,7 +726,11 @@ class Window(QMainWindow):
         btn_refresh.setFixedWidth(100)
         button_row.addWidget(btn_refresh)
         btn_refresh.clicked.connect(lambda: refresh_tab(self.tabs, 0, self.library()))
-        button_row.setAlignment(Qt.AlignmentFlag.AlignLeft)
+        button_row.addStretch(1)
+        btn_settings = QPushButton("Settings")
+        btn_settings.setFixedWidth(100)
+        button_row.addWidget(btn_settings)
+        btn_settings.clicked.connect(self.open_settings)
         ult.addLayout(button_row)
 
         layout = QGridLayout()
@@ -566,12 +749,13 @@ class Window(QMainWindow):
             image_l.setPixmap(image)
             image_l.setGeometry(0, 0, 250, 375)
 
+            self._game_label_font = QFont()
+            self._game_label_font.setBold(True)
+            self._game_label_font.setPixelSize(20)
+            
             label = QLabel(i)
-            bold = QFont()
-            bold.setBold(True)
-            bold.setPixelSize(20)
             label.setStyleSheet("background-color: rgba(0, 0, 0, 100)")
-            label.setFont(bold)
+            label.setFont(self._game_label_font)
             label.setWordWrap(True)
 
             button = QPushButton("Play")
@@ -631,14 +815,16 @@ class Window(QMainWindow):
         layout.setContentsMargins(10, 10, 10, 30) #links oben rechts unten
         ult.addLayout(layout)
 
+        # Cache bold font for headings (reuse same instance for show)
+        heading_font_exe_show = QFont()
+        heading_font_exe_show.setBold(True)
+        
         headings = [
             "Game", "exesrc", "png", "", "", "", ""
         ]
         for i, heading in enumerate(headings):
             label = QLabel(heading)
-            bold = QFont()
-            bold.setBold(True)
-            label.setFont(bold)
+            label.setFont(heading_font_exe_show)
             label.setFixedHeight(30)
             layout.addWidget(label, 0, i)
 
@@ -663,7 +849,11 @@ class Window(QMainWindow):
     def make_editor(self, type):
         self.editor = Editor(type, self)
         self.editor.show()
-##execution
+
+    def open_settings(self):
+        self.settings = Settings(self)
+        self.settings.show()
+## execution
 
 if __name__ == "__main__":
 
@@ -671,13 +861,60 @@ if __name__ == "__main__":
     p.add_argument("--metadata", "-m", default=METADATA_DEFAULT, help="Path to metadata JSON")
     p.add_argument("--recentdata", "-r", default=RECENTS_FILE_DEFAULT, help="Path to recents JSON")
     p.add_argument("--uidata", "-ui", default=UI_FILE_DEFAULT, help="Path to UI JSON")
+    p.add_argument("--settingsdata", "-settings", default=SETTINGS_FILE_DEFAULT, help="Path to settings JSON")
+    p.add_argument("--statedata", "-state", default=STATE_FILE_DEFAULT, help="Path to State JSON")
     args = p.parse_args()
-    #falesafe for first start and if file gets lost
+    #fail-safe for first start and if files get lost
     if not os.path.exists(args.metadata):
         main.main()
         web.main()
     if not os.path.exists(args.uidata):
-        create_ui(None)
+        create_blank(args.uidata)
+    if not os.path.exists(args.settingsdata):
+        create_blank(args.settingsdata)
+    if not os.path.exists(args.statedata):
+        create_blank(args.statedata)
+    #Setting executions:
+    settings_data = load_data(["settings"])[0]
+    #automatic scans
+    if settings_data.get("automatic_scans", False):
+        state_data = load_data(["state"])[0]
+        scan_frequency = settings_data.get("scan_frequency", "weekly")
+        today = date.today()
+        today_str = str(today)  # Cache string conversion
+        
+        last_scan_date_val = state_data.get("last_scan_date", "")
+        last_scan_date_str = str(last_scan_date_val) if last_scan_date_val else ""
+        has_not_scanned_today = last_scan_date_str != today_str
+        should_scan = False
+
+        if scan_frequency == "daily":
+            should_scan = has_not_scanned_today
+            
+        elif scan_frequency == "weekly":
+            should_scan = (today.weekday() == 6 and has_not_scanned_today)
+                
+        elif scan_frequency == "biweekly":
+            # Scan every 2 weeks - check if 14+ days since last scan
+            if last_scan_date_str:
+                try:
+                    last_scan_date = datetime.strptime(last_scan_date_str, "%Y-%m-%d").date()
+                    days_since_scan = (today - last_scan_date).days
+                    should_scan = days_since_scan >= 14
+                except (ValueError, TypeError):
+                    # If date parsing fails, treat as first scan
+                    should_scan = True
+            else:
+                should_scan = True  # First scan
+                
+        elif scan_frequency == "monthly":
+            should_scan = (today.day == 1 and has_not_scanned_today)
+        
+        if should_scan:
+            web.main()
+            # Update last scan date
+            save_data(state_data, {"last_scan_date": today_str}, "state")
+            print(f"Automatic scan executed on {today} (frequency: {scan_frequency})")
 
     app = QApplication(sys.argv)
 
@@ -696,7 +933,8 @@ if __name__ == "__main__":
     sys.exit(app.exec())
 
 
-##TODO:
+## TODO:
+#design function
 #library functions:
 #search function
 #favourites function
