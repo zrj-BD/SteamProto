@@ -135,15 +135,14 @@ def save_metadata_outputs(meta_dir: str, meta1: Dict[str, Any], meta2: Dict[str,
         json.dump(meta2, fh, indent=2, ensure_ascii=True)
 
 
-def collect_roots(base: str, skip_dirs: Optional[Set[str]] = None) -> DefaultDict[str, List[Tuple[str, List[str]]]]:
+def collect_roots(base: str) -> DefaultDict[str, List[Tuple[str, List[str]]]]:
     """
     Walk base and group roots/files per immediate child folder (top_key).
     Returns mapping: top_key -> list of (root_path, files_in_root)
     Skips any directory names in skip_dirs.
     NOTE: do not create a special "_root" key for files directly in base (we skip rel==".")
     """
-    if skip_dirs is None:
-        skip_dirs = {"_metadata"}
+    skip_dirs = {"_metadata", "_program"}
     groups: DefaultDict[str, List[Tuple[str, List[str]]]] = defaultdict(list)
     for root, dirs, files in os.walk(base):
         # prevent descending into metadata output folder
@@ -325,7 +324,7 @@ def main():
     existing_meta1, existing_meta2 = load_existing_metadatas(meta_dir)
 
     # collect groups under base, skip metadata folder so we don't descend into it
-    groups = collect_roots(base, skip_dirs={os.path.basename(meta_dir)})
+    groups = collect_roots(base)
 
     to_process: List[str] = []
     for top_key in groups.keys():

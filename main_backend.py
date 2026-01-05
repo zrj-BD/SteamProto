@@ -27,13 +27,13 @@ import main
 os.environ["QT_QUICK_CONTROLS_STYLE"] = "Basic"
 
 # Constants
-META_DEFAULT = os.path.join(os.path.dirname(os.getcwd()), "_metadata")
+META_DEFAULT = os.path.join(os.getcwd(), "_metadata")
 METADATA_DEFAULT = os.path.join(META_DEFAULT, "metadata.json")
 RECENTS_FILE_DEFAULT = os.path.join(META_DEFAULT, "recents.json")
 UI_FILE_DEFAULT = os.path.join(META_DEFAULT, "ui.json")
 SETTINGS_FILE_DEFAULT = os.path.join(META_DEFAULT, "settings.json")
 STATE_FILE_DEFAULT = os.path.join(META_DEFAULT, "state.json")
-DATA_LOC = os.path.join(os.path.dirname(os.getcwd()), "data")
+DATA_LOC = os.path.join(os.getcwd(), "data")
 
 APPLICATION_NAME = "Steam Proto v1.0a"
 
@@ -295,6 +295,7 @@ if __name__ == "__main__":
         create_blank(args.settingsdata)
     if not os.path.exists(args.statedata):
         create_blank(args.statedata)
+    print(args.metadata)
 
     # Initialize QtWebEngine
     QtWebEngineQuick.initialize()
