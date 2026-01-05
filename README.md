@@ -11,6 +11,7 @@ An Application to easily start Games not obtained via a Launcher. A Launcher rep
   - [Guide](#guide)
     - [Library](#library)
     - [Data](#data)
+    - [Settings](#Settings)
   - [License](#license)
 
 ## Features
@@ -32,8 +33,16 @@ Ensure `steamcmd.exe` is available in PATH or configure its location.
 
 ## Setup
 
-1. Download the ZIP package and place it into your Games Folder (the top folder is game dir, where all games are located).
-2. Execute the window.pyw application and wait a short time for it to scan your game folders.
+1. Download the ZIP package and place it into your Games Folder (the top folder is game dir, where all games are located, i.e. like this:)
+```
+games/
+├── game1
+├── game2
+├── etc...
+└── SteamProto/
+    └── ...
+```
+2. Execute the `window.pyw` application and wait a short time for it to scan your game folders.
 3. Now, on the Tab labeled 'Data', you must hit 'Edit' and enter the AppIDs of games where there is none yet. Save with 'Save', confirm and then in the main application click 'Update'.
 4. In the last Tab labeled 'Data2' you must again hit 'Edit' and click on the buttons for each game, giving the game's exe location. Afterward again hit 'Save' and confirm.
 5. Done! To start the application open `window.pyw`, to get cosmetics or use as update Logger please refer to the [Guide](#guide).
@@ -58,7 +67,7 @@ By clicking 'Edit', you open an Editor, where you are able to change the Data (b
 
 'Refresh' refreshes the window.
 
-'Update' checks all Data from SteamCMD anew, for whether a new update is out. Do this at least once a week to have accurate data.
+'Update' checks all Data from SteamCMD anew, for whether a new update is out. Do this at least once a week to have accurate data. Autoscanning can be turned on in [Settings](#Settings)
 
 'Scan' scans the folders for (new) games and adds them to the data. Do this after installing a new game to be able to access it later in Library.
 
@@ -71,7 +80,7 @@ Data2 acts the same, yet the exe file location is displayed and stored, as well 
 In the Settings you can configure wether 
   1. it should be scanned automatically for new versions with `Automatic Scans`
   2. how frequent the scans are with `Scan Frequency`
-  3. the design of the app with `design` (Light <-> Dark) [IN_PROGRESS]
+  3. the design of the app with `design` (Light <-> Dark)
 
 ## License
 

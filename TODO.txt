@@ -11,4 +11,4 @@ DONE - Add Integration to get images
 - EXE package
 - architecture
 DONE - settings via config.json
-- application design template, possibly QML template later on
+DONE - application design template, possibly QML template later on

@@ -1,10 +1,10 @@
 ##Imports
 # PyQt6
-from PyQt6.QtWidgets import QLayout, QMainWindow, QFileDialog, QSizePolicy, QHBoxLayout, QApplication, QVBoxLayout, QWidget, QLabel, QPushButton, QGridLayout, QTabWidget, QScrollArea, QLineEdit, QMessageBox, QComboBox
+from PyQt6.QtWidgets import QMainWindow, QFileDialog, QSizePolicy, QHBoxLayout, QApplication, QVBoxLayout, QWidget, QLabel, QPushButton, QGridLayout, QTabWidget, QScrollArea, QLineEdit, QMessageBox, QComboBox
 from PyQt6.QtGui import QIcon, QFont, QPixmap
 from PyQt6.QtCore import Qt, QUrl, QTimer
 from PyQt6.QtWebEngineWidgets import QWebEngineView
-from PyQt6.QtWebEngineCore import QWebEngineProfile, QWebEnginePage, QWebEngineUrlRequestInterceptor
+from PyQt6.QtWebEngineCore import QWebEngineProfile, QWebEnginePage
 from PyQt6_SwitchControl import SwitchControl
 # random
 import sys
@@ -21,6 +21,7 @@ import requests
 import web
 import remover
 import main
+from theme_manager import get_theme_manager
 ## constants
 
 META_DEFAULT = os.path.join(os.getcwd(), "_metadata")
@@ -33,7 +34,7 @@ STATE_FILE_DEFAULT = os.path.join(META_DEFAULT, "state.json")
 APPLICATION_NAME = "Steam Proto v1.0a"
 ## loading data
 
-def load_data(files) -> Tuple[Dict[str, Dict[str,Any]], Optional[Dict[str, Dict[str, Any]]]]:
+def load_data(files) -> Tuple[Dict[str, Any], Optional[Dict[str, Dict[str, Any]]]]:
     """
     Load files and return dicts.
     """
@@ -46,7 +47,6 @@ def load_data(files) -> Tuple[Dict[str, Dict[str,Any]], Optional[Dict[str, Dict[
                 with open(path, "r", encoding="utf-8") as fh:
                     data = json.load(fh)
             except (json.JSONDecodeError, IOError, OSError):
-                # Silently fail and use empty dict
                 pass
         result.append(data)
     return tuple(result)
@@ -72,31 +72,60 @@ def create_blank(loc: str):
     
 ## running files
 
-def run_exe(exe: str):
+def run_exe(exe: str, parent_window: Optional[QMainWindow] = None):
+    """
+    Run an executable file.
+    
+    Args:
+        exe: Path to executable file
+        parent_window: Optional parent window to close after launching
+    """
     try: 
         subprocess.Popen([exe], cwd=os.path.dirname(exe))
-        window.close()
-    except Exception:
-        print("Error running exe")
+        if parent_window:
+            parent_window.close()
+    except Exception as e:
+        print(f"Error running exe: {e}")
 ## struc build
 
 def get_struc(keys: List[str], layout: QGridLayout, ref: Tuple[Dict[str, Dict[str, Any]], Dict[str, Dict[str, Any]]]) -> Dict[str, Dict[str, Any]]:
+    """
+    Extract structure data from layout widgets.
+    
+    Args:
+        keys: List of keys to extract
+        layout: Grid layout containing widgets
+        ref: Tuple of (metadata dict, recent dict)
+        
+    Returns:
+        Dictionary with extracted values
+    """
     n = 1
     out = {}
+    build = ""  # Initialize build variable to avoid UnboundLocalError
+    
     for i in ref[0]:
         out[i] = {}
         p = 1
         for k in keys:
             if k == "build":
-                build = layout.itemAtPosition(n, p).widget().text()  # type: ignore
-            if k == "date":
-                if build == ref[1][i]["build"] or build == "":
+                widget = layout.itemAtPosition(n, p)
+                if widget is not None:
+                    build = widget.widget().text()  # type: ignore
+            elif k == "date":
+                # Check if build changed or is empty
+                if build == "" or (ref[1].get(i, {}).get("build") and build == ref[1][i]["build"]):
                     out[i][k] = int(time.time())
                 else:
-                    out[i][k] = ref[0][i]["date"]
+                    out[i][k] = ref[0][i].get("date", int(time.time()))
             elif k == "png":
                 continue
-            elif layout.itemAtPosition(n, p).widget().text() != "": out[i][k] = layout.itemAtPosition(n, p).widget().text()  # type: ignore
+            else:
+                widget = layout.itemAtPosition(n, p)
+                if widget is not None:
+                    text = widget.widget().text()  # type: ignore
+                    if text:
+                        out[i][k] = text
             p += 1
         n += 1
     return out
@@ -132,7 +161,7 @@ def build_struc(keys: Tuple[list[str], list[str]], layout: QGridLayout, files: T
                         try: 
                             label = QPushButton(files[para][i][k]) # pyright: ignore[reportOptionalSubscript]
                         except Exception: label = QPushButton(None)
-                        label.clicked.connect(lambda checked, folder=i, l=label: pick_path(window, folder, l))
+                        label.clicked.connect(lambda checked, folder=i, l=label, w=window: pick_path(w, folder, l))
                 elif k == "png":
                     if type == "show":
                         label = QLabel()
@@ -153,7 +182,7 @@ def build_struc(keys: Tuple[list[str], list[str]], layout: QGridLayout, files: T
                         image.setPixmap(pix)
                         button = QPushButton("Change/Add")
                         try:
-                            button.clicked.connect(lambda checked, game = i: Editor("exe", window).pick_img_view(game))
+                            button.clicked.connect(lambda checked, game=i, w=window: Editor("exe", w).pick_img_view(game))
                         except Exception: pass
                         label_layout.addWidget(image)
                         label_layout.addWidget(button)                  
@@ -232,6 +261,10 @@ class Settings(QMainWindow):
         self.settings_widgets: Dict[str, Any] = {}
         # Store loaded settings data for saving
         self.loaded_settings_data = {}
+        # Store reference to parent window
+        self.parent_window = parent
+        # Get theme manager
+        self.theme_manager = get_theme_manager()
         
         self.main_window = self.settings()
         self.setCentralWidget(self.main_window)
@@ -294,19 +327,22 @@ class Settings(QMainWindow):
             # Create widget based on type
             if setting_type == "toggle":
                 is_checked = bool(current_value)
-                widget = SwitchControl(checked = is_checked)
+                widget = SwitchControl(checked=is_checked)
+                
+                # Get toggle colors based on current theme and toggle state
+                toggle_colors = self.theme_manager.get_toggle_colors()
+                button_default_colors = self.theme_manager._button_palette
                 
                 if key == "design":
-                    # Light mode (True): lighter colors with gold circle
-                    # Dark mode (False): darker colors with dark circle
-                    widget.set_bg_color("#E0E0E0")  # Light gray background
-                    widget.set_active_color("#F5F5F5")  # Very light gray when active (light mode)
-                    widget.set_circle_color("#FFD700" if is_checked else "#4A4A4A")  # Gold for light mode, dark gray for dark mode
+                    # Design toggle uses theme-aware colors
+                    widget.set_bg_color(toggle_colors["bg_color"])
+                    widget.set_active_color(toggle_colors["active_color"])
+                    widget.set_circle_color(toggle_colors["circle_color"])
                 else:
-                    # Standard toggle colors
-                    widget.set_bg_color("#414241")
-                    widget.set_active_color("#515251")
-                    widget.set_circle_color("#34b233" if is_checked else "#aa2626")  # Green for on, red for off
+                    # Other toggles use theme-aware background with colored circle
+                    widget.set_bg_color(toggle_colors["bg_color"])
+                    widget.set_active_color(toggle_colors["active_color"])
+                    widget.set_circle_color(button_default_colors["button_on"] if is_checked else button_default_colors["button_off"])
                 
                 widget.toggled.connect(lambda state, w=widget, k=key: self.on_toggle(state, w, k))
                 layout.addWidget(widget, row, 3)
@@ -336,7 +372,16 @@ class Settings(QMainWindow):
             self.settings_widgets[key] = widget
 
         # Connect save button
-        btn_save.clicked.connect(lambda: (confirm(parent=self, message="Save changes?", action=lambda: save_data(self.loaded_settings_data, self.read_settings(), "settings"), default="Yes"), self.updater())) # pyright: ignore[reportArgumentType]
+        def save_and_update():
+            new_settings = self.read_settings()
+            save_data(self.loaded_settings_data, new_settings, "settings")
+            # Apply theme if design setting changed
+            if "design" in new_settings:
+                is_light = new_settings["design"]
+                self.theme_manager.set_theme(is_light)
+            self.updater()
+        
+        btn_save.clicked.connect(lambda: confirm(parent=self, message="Save changes?", action=save_and_update, default="Yes"))
         
         page = QWidget()
         page.setLayout(ult)
@@ -346,16 +391,50 @@ class Settings(QMainWindow):
     
     def on_toggle(self, state: bool, button: SwitchControl, key: str):
         """Handler for toggle button state changes"""
+        # Get toggle colors based on current theme and new toggle state
+        toggle_colors = self.theme_manager.get_toggle_colors()
+        button_default_colors = self.theme_manager._button_palette
+        
         if key == "design":
-            # Light mode: gold, Dark mode: dark gray
-            button.set_circle_color("#FFD700" if state else "#4A4A4A")
+            # Design toggle: update colors and apply theme immediately
+            button.set_bg_color(toggle_colors["bg_color"])
+            button.set_active_color(toggle_colors["active_color"])
+            button.set_circle_color(toggle_colors["circle_color"])
+            
+            # Apply theme immediately
+            self.theme_manager.set_theme(state)
+            
+            # Update all toggle buttons to reflect new theme
+            self._update_all_toggle_colors()
         else:
-            # Green for on, red for off
-            button.set_circle_color("#34b233" if state else "#aa2626")
+            # Other toggles: update colors based on theme and state
+            button.set_bg_color(toggle_colors["bg_color"])
+            button.set_active_color(toggle_colors["active_color"])
+            button.set_circle_color(button_default_colors["button_on"] if state else button_default_colors["button_off"])
+    
+    def _update_all_toggle_colors(self):
+        """Update all toggle button colors to match current theme."""
+        for key, widget in self.settings_widgets.items():
+            if isinstance(widget, SwitchControl):
+                # Get current toggle state
+                is_checked = widget.isChecked()
+                toggle_colors = self.theme_manager.get_toggle_colors()
+                button_default_colors = self.theme_manager._button_palette
+                
+                if key == "design":
+                    widget.set_bg_color(toggle_colors["bg_color"])
+                    widget.set_active_color(toggle_colors["active_color"])
+                    widget.set_circle_color(toggle_colors["circle_color"])
+                else:
+                    widget.set_bg_color(toggle_colors["bg_color"])
+                    widget.set_active_color(toggle_colors["active_color"])
+                    widget.set_circle_color(button_default_colors["button_on"] if is_checked else button_default_colors["button_off"])
     
     def updater(self):
         self.close()
-        refresh_tab(window.tabs, 0, getattr(window, "library")())  # pyright: ignore[reportPossiblyUnboundVariable]
+        self.theme_manager.set_theme(self.loaded_settings_data["design"])
+        if self.parent_window:
+            refresh_tab(self.parent_window.tabs, 0, self.parent_window.library())
 
     def closeEvent(self, event):
         self.updater()
@@ -432,8 +511,10 @@ class ManualDownloadWindow(QMainWindow):
         self.close()
 
     def updater(self):
-        refresh_tab(window.tabs, 2, getattr(window, "exe")())
-        refresh_tab(window.tabs, 0, getattr(window, "library")())
+        parent_window = self.parent()
+        if parent_window and isinstance(parent_window, Window):
+            refresh_tab(parent_window.tabs, 2, parent_window.exe())
+            refresh_tab(parent_window.tabs, 0, parent_window.library())
 
     def closeEvent(self, event):
         self.updater()
@@ -447,7 +528,7 @@ class WebCaptureView(QMainWindow):
     def __init__(self, url, game, parent):
         super().__init__(parent)
         self.game = game
-        self.parent1 = parent
+        self.parent_window = parent
         self.resize(1500, 900)
         self.setWindowTitle("Copy Image Address")
         self.setWindowIcon(QIcon("data\\local\\icon_DATA.png"))
@@ -461,7 +542,7 @@ class WebCaptureView(QMainWindow):
         QTimer.singleShot(0, lambda: self.viewer.load(QUrl(url)))
 
     def manual_download_window(self):
-        self.next = ManualDownloadWindow(self.game, self.parent1)
+        self.next = ManualDownloadWindow(self.game, self.parent_window)
         self.next.show()
 
     def closeEvent(self, event):
@@ -607,9 +688,16 @@ class Editor(QMainWindow):
     
     def updater(self):
         self.close()
-        if self.type == "data": index = 1
-        elif self.type == "exe": index = 2
-        refresh_tab(window.tabs, index, getattr(window, self.type)())  # pyright: ignore[reportPossiblyUnboundVariable]
+        if self.parent():
+            parent_window = self.parent()
+            if isinstance(parent_window, Window):
+                if self.type == "data": 
+                    index = 1
+                elif self.type == "exe": 
+                    index = 2
+                else:
+                    return
+                refresh_tab(parent_window.tabs, index, getattr(parent_window, self.type)())
 
     def pick_img_view(self, game):
         game_parts = re.split(" ", game)
@@ -636,6 +724,21 @@ class Window(QMainWindow):
         self.setWindowIcon(QIcon("data\\local\\icon_DATA.png"))
         self.main_window = QWidget(self)
         self.setCentralWidget(self.main_window)
+        
+        # Get theme manager and apply initial theme
+        self.theme_manager = get_theme_manager()
+        # Load settings to determine initial theme
+        settings_data = load_data(["settings"])[0]
+        is_light = bool(settings_data.get("design", False))
+        self.theme_manager.set_theme(is_light)
+        
+        # Cache fonts for performance
+        self._bold_font = QFont()
+        self._bold_font.setBold(True)
+        self._game_label_font = QFont()
+        self._game_label_font.setBold(True)
+        self._game_label_font.setPixelSize(20)
+        
         self.UI()
 
     def UI(self):
@@ -690,9 +793,7 @@ class Window(QMainWindow):
             ]
         for i, heading in enumerate(headings):
             label = QLabel(heading)
-            bold = QFont()
-            bold.setBold(True)
-            label.setFont(bold)
+            label.setFont(self._bold_font)
             label.setFixedHeight(30)
             layout.addWidget(label, 0, i)
 
@@ -742,31 +843,31 @@ class Window(QMainWindow):
         n = 0
         for i in games:
             container = QWidget()
-            #container.setStyleSheet("border: 2px solid black; background-color: lightgray;")
             image_l = QLabel(container)
-            image = QPixmap(f"data/imgs/{i}.png")
+            image_path = f"data/imgs/{i}.png"
+            if os.path.exists(image_path):
+                image = QPixmap(image_path)
+            else:
+                # Use a placeholder if image doesn't exist
+                image = QPixmap(250, 375)
+                image.fill(Qt.GlobalColor.gray)
             image = image.scaled(250, 375, Qt.AspectRatioMode.KeepAspectRatioByExpanding, Qt.TransformationMode.SmoothTransformation)
             image_l.setPixmap(image)
             image_l.setGeometry(0, 0, 250, 375)
-
-            self._game_label_font = QFont()
-            self._game_label_font.setBold(True)
-            self._game_label_font.setPixelSize(20)
             
             label = QLabel(i)
-            label.setStyleSheet("background-color: rgba(0, 0, 0, 100)")
+            label.setStyleSheet(self.theme_manager.get_game_label_style())
             label.setFont(self._game_label_font)
             label.setWordWrap(True)
 
             button = QPushButton("Play")
             button.setFixedSize(100, 50)
-            button.setStyleSheet("""QPushButton{ background-color: rgba(0, 0, 0, 100)}
-                                 QPushButton:hover{ background-color: rgba(0, 0, 0, 150)}
-                                 QPushButton:pressed{ background-color: rgba(0, 0, 0, 200)}""")
+            button.setStyleSheet(self.theme_manager.get_play_button_style())
             try: 
                 exe_path = games[i]["exesrc"]
-                button.clicked.connect(lambda checked, path=exe_path: run_exe(path))
-            except Exception: pass
+                button.clicked.connect(lambda checked, path=exe_path, pw=self: run_exe(path, pw))
+            except Exception: 
+                pass
 
             container.setFixedHeight(375)
             container.setFixedWidth(250)
@@ -934,7 +1035,6 @@ if __name__ == "__main__":
 
 
 ## TODO:
-#design function
 #library functions:
 #search function
 #favourites function
