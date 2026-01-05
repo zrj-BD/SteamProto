@@ -74,7 +74,7 @@ class MainWindow(QMainWindow):
 
     def _create_library_tab(self):
         """Create the library tab."""
-        return create_library_view(self, self.load_data_func, self.theme_manager)
+        return create_library_view(self, self.load_data_func, self.save_data_func, self.theme_manager)
 
     def _create_data_tab(self):
         """Create the data/metadata tab."""

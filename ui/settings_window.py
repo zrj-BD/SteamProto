@@ -216,7 +216,7 @@ class Settings(QMainWindow):
             from ui.library_view import create_library_view
             self.refresh_tab_func(
                 self.parent_window.tabs, 0, 
-                create_library_view(self.parent_window, self.load_data_func, self.theme_manager)
+                create_library_view(self.parent_window, self.load_data_func, self.save_data_func, self.theme_manager)
             )
 
     def closeEvent(self, event):

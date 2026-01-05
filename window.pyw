@@ -108,7 +108,7 @@ def main():
     def load_data_wrapper(files):
         return load_data(files, args)
     
-    def save_data_wrapper(og, data, file, type):
+    def save_data_wrapper(og, data, file, type="merge"):
         return save_data(og, data, file, args, type)
     
     def get_struc_wrapper(keys, layout, ref):

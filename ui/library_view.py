@@ -10,7 +10,7 @@ from ui.components.game_card import GameCard
 from utils.helpers import run_exe
 
 
-def create_library_view(parent_window, load_data_func, theme_manager):
+def create_library_view(parent_window, load_data_func, save_data_func, theme_manager):
     """
     Create the library view with game cards.
     
@@ -52,8 +52,7 @@ def create_library_view(parent_window, load_data_func, theme_manager):
         from ui.settings_window import Settings
         from utils.helpers import refresh_tab
         parent_window.settings = Settings(
-            parent_window, load_data_func, 
-            lambda og, data, file: None,  # Placeholder save function
+            parent_window, load_data_func, save_data_func,
             theme_manager, refresh_tab
         )
         parent_window.settings.show()
