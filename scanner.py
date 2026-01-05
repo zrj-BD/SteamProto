@@ -1,3 +1,8 @@
+"""
+Game Folder Architecture Scanner
+Scans the game dir and produces jsons metadata and metadata_fix
+The Scan Button
+"""
 import os
 import json
 import argparse
@@ -5,7 +10,6 @@ import re
 from typing import Dict, List, Any, Optional, Set, Tuple, DefaultDict
 from collections import defaultdict
 import time 
-# crazy bro. you removed that and got yourself like 1h on top. but youre actually getting how it works kinda now. you understood yourself
 # Simple, explicit mappings (defaults).
 DEFAULT_SEARCHABLE_EXTS = [".txt", ".ini"]
 

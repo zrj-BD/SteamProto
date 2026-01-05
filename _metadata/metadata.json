@@ -1,69 +1,64 @@
 {
   "5D Chess With Multiverse Time Travel": {
-    "date": 1765656878,
-    "appid": "1349230"
+    "appid": "1349230",
+    "date": 1767637564
   },
   "Baldur's Gate 3": {
-    "build": "20875335",
     "appid": "1086940",
     "emulator": "RUNE",
-    "version": "4.1.1.6848561",
-    "date": 1765656878
+    "build": "18533999",
+    "date": 1767637340
   },
   "Dave the Diver": {
     "appid": "1868140",
     "emulator": "Goldberg",
-    "date": 1765656878
+    "date": 1767637564
   },
   "Opus Magnum": {
-    "date": 1765656878,
-    "appid": "558990"
+    "appid": "558990",
+    "date": 1767637564
   },
   "Slay The Princess": {
-    "emulator": "Goldberg",
     "appid": "1989270",
-    "version": "3.0.4",
+    "emulator": "Goldberg",
     "build": "20170101",
-    "date": 1765654820
+    "date": 1767637382
   },
   "The Coffin of Andy and Leyley": {
-    "emulator": "Goldberg",
     "appid": "2378900",
-    "date": 1765656878
+    "emulator": "Goldberg",
+    "date": 1767637564
   },
   "The Farmer Was Replaced": {
-    "emulator": "REXA",
     "appid": "2060160",
-    "version": "2.1.0.0",
-    "date": 1765656878
+    "emulator": "REXA",
+    "date": 1767637564
   },
   "Victoria 3": {
     "appid": "529340",
     "emulator": "RUNE",
     "build": "2071472",
-    "date": 1765654820
+    "date": 1767637407
   },
   "WorldBox": {
-    "emulator": "Goldberg",
     "appid": "1206560",
-    "version": "2.1.0.0",
-    "date": 1765656878
+    "emulator": "Goldberg",
+    "date": 1767637564
   },
   "Zero Escape - The Nonary Games": {
-    "emulator": "Goldberg",
     "appid": "477740",
-    "date": 1765656878
+    "emulator": "Goldberg",
+    "date": 1767637564
   },
   "Crusader Kings III": {
-    "build": "20782865",
-    "emulator": "REXA",
     "appid": "1158310",
-    "version": "1.18.1.1",
-    "date": 1765654820
+    "emulator": "REXA",
+    "build": "20782865",
+    "date": 1767637374
   },
   "Geometry Dash": {
-    "emulator": "Goldberg",
     "appid": "322170",
-    "date": 1765656878
+    "emulator": "Goldberg",
+    "date": 1767637564
   }
 }
