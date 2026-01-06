@@ -38,7 +38,7 @@ def create_library_view(parent_window, load_data_func, save_data_func, theme_man
     def refresh_library():
         from utils.helpers import refresh_tab
         refresh_tab(parent_window.tabs, 0, 
-                   create_library_view(parent_window, load_data_func, theme_manager))
+                   create_library_view(parent_window, load_data_func, save_data_func, theme_manager))
     
     btn_refresh.clicked.connect(refresh_library)
     

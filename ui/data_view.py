@@ -214,7 +214,7 @@ def _create_exe_view(parent_window, load_data_func, save_data_func,
         layout.addWidget(label, 0, i)
 
     # Build data table
-    build_data_table(EXE_KEYS, layout, (items[0],), "show", None)
+    build_data_table(EXE_KEYS, layout, (items[0],), "show", None)  # pyright: ignore[reportArgumentType]
     
     # Scroll area
     scroll = QScrollArea()

@@ -157,15 +157,15 @@ class Editor(QMainWindow):
                                           self.refresh_tab_func, self.pick_path_func,
                                           self.web_profile, view_type="exe")
                 
-                self.refresh_tab_func(parent_window.tabs, index, view)
+                self.refresh_tab_func(parent_window.tabs, index, view)  # pyright: ignore[reportAttributeAccessIssue, reportOptionalMemberAccess]
 
     def pick_img_view(self, game):
         """Open web view to pick game image."""
         game_parts = re.split(" ", game)
         game_url = "+".join(game_parts)
         url = f"https://www.steamgriddb.com/search/grids?term={game_url}"
-        self.viewer = WebCaptureView(url, game, self, self.web_profile, 
-                                     self.refresh_tab_func, self.load_data_func)
+        self.viewer = WebCaptureView(url, game, self, self.web_profile, self.refresh_tab_func, 
+                                     self.load_data_func, self.save_data_func)
         self.viewer.setWindowModality(Qt.WindowModality.NonModal)
         self.viewer.show()
 
@@ -173,13 +173,14 @@ class Editor(QMainWindow):
 class WebCaptureView(QMainWindow):
     """Web view for capturing image URLs."""
     
-    def __init__(self, url: str, game: str, parent, web_profile, refresh_tab_func, load_data_func):
+    def __init__(self, url: str, game: str, parent, web_profile, refresh_tab_func, load_data_func, save_data_func):
         super().__init__(parent)
         self.game = game
         self.parent_window = parent
         self.web_profile = web_profile
         self.refresh_tab_func = refresh_tab_func
         self.load_data_func = load_data_func
+        self.save_data_func = save_data_func
         
         self.resize(1500, 900)
         self.setWindowTitle("Copy Image Address")
@@ -195,8 +196,8 @@ class WebCaptureView(QMainWindow):
 
     def manual_download_window(self):
         """Open manual download window."""
-        self.next = ManualDownloadWindow(self.game, self.parent_window, 
-                                        self.refresh_tab_func, self.load_data_func)
+        self.next = ManualDownloadWindow(self.game, self.parent_window, self.refresh_tab_func,
+                                         self.load_data_func, self.save_data_func)
         self.next.show()
 
     def closeEvent(self, event):
@@ -209,11 +210,12 @@ class WebCaptureView(QMainWindow):
 class ManualDownloadWindow(QMainWindow):
     """Window for manually entering image URL."""
     
-    def __init__(self, game: str, parent, refresh_tab_func, load_data_func):
+    def __init__(self, game: str, parent, refresh_tab_func, load_data_func, save_data_func):
         super().__init__(parent)
         self.game = game
         self.refresh_tab_func = refresh_tab_func
         self.load_data_func = load_data_func
+        self.save_data_func = save_data_func
         
         self.resize(300, 200)
         self.setWindowTitle("Paste Image Address")
@@ -268,8 +270,8 @@ class ManualDownloadWindow(QMainWindow):
             # Refresh exe tab (index 2)
             exe_view = create_data_view(parent_window, self.load_data_func, None, 
                                        None, self.refresh_tab_func, None, None, "exe")
-            self.refresh_tab_func(parent_window.tabs, 2, exe_view)
+            self.refresh_tab_func(parent_window.tabs, 2, exe_view)  # pyright: ignore[reportAttributeAccessIssue]
             
             # Refresh library tab (index 0)
-            library_view = create_library_view(parent_window, self.load_data_func, None)
-            self.refresh_tab_func(parent_window.tabs, 0, library_view)
+            library_view = create_library_view(parent_window, self.load_data_func, self.save_data_func, None)
+            self.refresh_tab_func(parent_window.tabs, 0, library_view)  # pyright: ignore[reportAttributeAccessIssue]

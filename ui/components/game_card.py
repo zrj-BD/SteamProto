@@ -87,7 +87,7 @@ class GameCard(QWidget):
         # Connect play button
         if self.exe_path and self.run_exe_func:
             play_button.clicked.connect(
-                lambda: self.run_exe_func(self.exe_path, self.parent_window)
+                lambda: self.run_exe_func(self.exe_path, self.parent_window)  # pyright: ignore[reportOptionalCall]
             )
         
         # Layout

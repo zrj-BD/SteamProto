@@ -48,6 +48,8 @@ class Settings(QMainWindow):
         """Build the settings UI."""
         settings_data = self.load_data_func(["settings"])[0]
         self.loaded_settings_data = settings_data
+        self.theme = settings_data.get("design", False)
+        self.theme_on = settings_data.get("theme_activated", True)
 
         ult = QVBoxLayout()
         ult.setContentsMargins(0, 0, 0, 0)
@@ -59,7 +61,7 @@ class Settings(QMainWindow):
         button_row.setContentsMargins(0, 0, 0, 0)
         
         btn_exit = QPushButton("Exit")
-        btn_exit.clicked.connect(lambda: self.updater())
+        btn_exit.clicked.connect(lambda: self.close())
         btn_exit.setFixedWidth(100)
         button_row.addWidget(btn_exit)
         
@@ -108,8 +110,6 @@ class Settings(QMainWindow):
         def save_and_update():
             new_settings = self.read_settings()
             self.save_data_func(self.loaded_settings_data, new_settings, "settings")
-            if "design" in new_settings:
-                self.theme_manager.set_theme(new_settings["design"])
             self.close()
         
         btn_save.clicked.connect(
@@ -175,15 +175,23 @@ class Settings(QMainWindow):
         toggle_colors = self.theme_manager.get_toggle_colors()
         button_default_colors = self.theme_manager._button_palette
         
+        button.set_bg_color(toggle_colors["bg_color"])
+        button.set_active_color(toggle_colors["active_color"])
+
         if key == "design":
-            button.set_bg_color(toggle_colors["bg_color"])
-            button.set_active_color(toggle_colors["active_color"])
             button.set_circle_color(toggle_colors["circle_color"])
-            self.theme_manager.set_theme(state)
+            self.theme = state
+            self.theme_manager.set_theme(self.theme, self.theme_on)
+            self._update_all_toggle_colors()
+        elif key == "theme_activated":
+            button.set_circle_color(
+                button_default_colors["button_on"] if state 
+                else button_default_colors["button_off"]
+            )
+            self.theme_on = state
+            self.theme_manager.set_theme(self.theme, self.theme_on)
             self._update_all_toggle_colors()
         else:
-            button.set_bg_color(toggle_colors["bg_color"])
-            button.set_active_color(toggle_colors["active_color"])
             button.set_circle_color(
                 button_default_colors["button_on"] if state 
                 else button_default_colors["button_off"]
@@ -211,7 +219,7 @@ class Settings(QMainWindow):
     
     def updater(self):
         """Update parent window when closing."""
-        self.theme_manager.set_theme(self.loaded_settings_data["design"])
+        self.theme_manager.set_theme(self.loaded_settings_data["design"], self.loaded_settings_data["theme_activated"])
         if self.parent_window and hasattr(self.parent_window, 'tabs'):
             from ui.library_view import create_library_view
             self.refresh_tab_func(

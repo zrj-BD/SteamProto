@@ -1,22 +1,22 @@
 {
   "5D Chess With Multiverse Time Travel": {
     "appid": "1349230",
-    "date": 1767637564
+    "date": 1767699143
   },
   "Baldur's Gate 3": {
     "appid": "1086940",
     "emulator": "RUNE",
-    "build": "18533999",
-    "date": 1767637340
+    "build": "20875335",
+    "date": 1767699143
   },
   "Dave the Diver": {
     "appid": "1868140",
     "emulator": "Goldberg",
-    "date": 1767637564
+    "date": 1767699143
   },
   "Opus Magnum": {
     "appid": "558990",
-    "date": 1767637564
+    "date": 1767699143
   },
   "Slay The Princess": {
     "appid": "1989270",
@@ -27,12 +27,12 @@
   "The Coffin of Andy and Leyley": {
     "appid": "2378900",
     "emulator": "Goldberg",
-    "date": 1767637564
+    "date": 1767699143
   },
   "The Farmer Was Replaced": {
     "appid": "2060160",
     "emulator": "REXA",
-    "date": 1767637564
+    "date": 1767699143
   },
   "Victoria 3": {
     "appid": "529340",
@@ -43,12 +43,12 @@
   "WorldBox": {
     "appid": "1206560",
     "emulator": "Goldberg",
-    "date": 1767637564
+    "date": 1767699143
   },
   "Zero Escape - The Nonary Games": {
     "appid": "477740",
     "emulator": "Goldberg",
-    "date": 1767637564
+    "date": 1767699143
   },
   "Crusader Kings III": {
     "appid": "1158310",
@@ -59,6 +59,6 @@
   "Geometry Dash": {
     "appid": "322170",
     "emulator": "Goldberg",
-    "date": 1767637564
+    "date": 1767699143
   }
 }

@@ -36,6 +36,7 @@ STANDARD_BUTTON_WIDTH = 100
 SETTINGS_CONFIG = [
     {"key": "automatic_scans", "type": "toggle", "label": "Automatic Scans", "default": False},
     {"key": "scan_frequency", "type": "select", "label": "Scan Frequency", "default": "weekly", "options": ["daily", "weekly", "biweekly", "monthly"]},
+    {"key": "theme_activated", "type": "toggle", "label": "Newer Design", "default": True},
     {"key": "design", "type": "toggle", "label": "Design", "default": False},
 ]
 

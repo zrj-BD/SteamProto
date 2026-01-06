@@ -43,8 +43,9 @@ class MainWindow(QMainWindow):
         # Load and apply initial theme
         settings_data = load_data_func(["settings"])[0]
         is_light = bool(settings_data.get("design", False))
-        theme_manager.set_theme(is_light)
-        
+        activated_theme = bool(settings_data.get("theme_activated", True))
+        theme_manager.set_theme(is_light, activated_theme)
+
         # Cache fonts for performance
         self._bold_font = QFont()
         self._bold_font.setBold(True)
@@ -54,7 +55,7 @@ class MainWindow(QMainWindow):
         
         self.main_window = QWidget(self)
         self.setCentralWidget(self.main_window)
-        
+
         self._build_ui()
 
     def _build_ui(self):
