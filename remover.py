@@ -1,3 +1,8 @@
+"""
+Marker Remover
+Removes placed markers from game folders by main.py
+Used in Rescanning
+"""
 import os
 import argparse
 from typing import List

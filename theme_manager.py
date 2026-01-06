@@ -15,10 +15,12 @@ class ThemeManager(QObject):
     
     # Signal emitted when theme changes
     theme_changed = Signal(bool)  # True for light mode, False for dark mode
+    theme_on = Signal(bool)
     
     def __init__(self):
         super().__init__()
         self._is_light_mode = False
+        self._activated_theme = False
         
         # Define color palettes
         self._dark_palette = {
@@ -66,21 +68,29 @@ class ThemeManager(QObject):
         return self._is_light_mode
     
     @property
+    def activated_theme(self) -> bool:
+        """Check if theme is currently active."""
+        return self._activated_theme
+
+    @property
     def palette(self) -> Dict[str, str]:
         """Get current color palette."""
         return self._light_palette if self._is_light_mode else self._dark_palette
     
-    def set_theme(self, is_light_mode: bool):
+    def set_theme(self, is_light_mode: bool, activated_theme: bool = True):
         """
         Set the application theme.
         
         Args:
             is_light_mode: True for light mode, False for dark mode
+            activated_theme: True for theme on, False for theme off
         """
-        if self._is_light_mode != is_light_mode:
+        if self._is_light_mode != is_light_mode or self._activated_theme != activated_theme:
             self._is_light_mode = is_light_mode
+            self._activated_theme = activated_theme
             self.apply_theme()
             self.theme_changed.emit(is_light_mode)
+            self.theme_on.emit(activated_theme)
     
     def apply_theme(self):
         """Apply the current theme to the QApplication."""
@@ -219,30 +229,39 @@ class ThemeManager(QObject):
             min-width: 80px;
         }}
         """
-        
-        app.setStyleSheet(stylesheet)  # type: ignore[attr-defined]
+        if self._activated_theme:
+            app.setStyleSheet(stylesheet)  # type: ignore[attr-defined]
+        else:
+            app.setStyleSheet(None)  # type: ignore[attr-defined]
     
     def get_game_label_style(self) -> str:
         """Get stylesheet for game labels in library view."""
-        palette = self.palette
-        return f"background-color: {palette['label_overlay']}; color: {palette['text']};"
+        if self._activated_theme:
+            palette = self.palette
+        else: 
+            palette = self._dark_palette
+        return f"background-color: {palette['label_overlay']}; color: {palette['text']}; border-radius: 5px;"
     
     def get_play_button_style(self) -> str:
         """Get stylesheet for play buttons in library view."""
-        palette = self.palette
+        if self._activated_theme:
+            palette = self.palette
+        else: 
+            palette = self._dark_palette
         return f"""
-        QPushButton {{
-            background-color: {palette['label_overlay']};
-            color: {palette['text']};
-            border: none;
-        }}
-        QPushButton:hover {{
-            background-color: {palette['label_overlay_hover']};
-        }}
-        QPushButton:pressed {{
-            background-color: {palette['button_pressed']};
-        }}
-        """
+            QPushButton {{
+                background-color: {palette['label_overlay']};
+                color: {palette['text']};
+                border: none;
+                border-radius: 10px;
+            }}
+            QPushButton:hover {{
+                background-color: {palette['label_overlay_hover']};
+            }}
+            QPushButton:pressed {{
+                background-color: {palette['button_pressed']};
+            }}
+            """
     
     def get_toggle_colors(self) -> Dict[str, str]:
         """
@@ -254,7 +273,7 @@ class ThemeManager(QObject):
         Returns:
             Dictionary with bg_color, active_color, and circle_color
         """
-        if self._is_light_mode:
+        if self._is_light_mode and self._activated_theme:
             # Light mode: light background, slightly lighter when toggled on
             return {
                 "bg_color": "#E5E5E5",  # Light gray background (off state)

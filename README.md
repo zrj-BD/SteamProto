@@ -17,10 +17,14 @@ An Application to easily start Games not obtained via a Launcher. A Launcher rep
 ## Features
 
 - easy game access via a Library
-![alt text](image.png)
+
+![alt text](show_library.png)
+
 - easy comparison of game versions (current and new)
-![alt text](image-1.png)
-- optional comsetics (e.g as in image 1)
+
+![alt text](show_data.png)
+
+- optional comsetics (i.e. as in image 1)
 
 ## Dependencies
 

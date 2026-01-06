@@ -1,3 +1,8 @@
+"""
+SteamCMD caller for up-to-date information
+Calls SteamCMD for newest information
+Used in Update Button
+"""
 import os
 import json
 import argparse
