@@ -2,14 +2,17 @@
 Editor window classes for data and executable editing.
 """
 import re
-from PyQt6.QtWidgets import (QMainWindow, QVBoxLayout, QHBoxLayout, QPushButton, 
-                              QWidget, QLabel, QScrollArea, QGridLayout, QSizePolicy, QLineEdit)
-from PyQt6.QtGui import QIcon, QFont
-from PyQt6.QtCore import Qt, QUrl, QTimer
-from PyQt6.QtWebEngineWidgets import QWebEngineView
-from PyQt6.QtWebEngineCore import QWebEnginePage
-import requests
 import os
+import requests
+import threading
+
+from PyQt6.QtWidgets import (
+    QMainWindow, QVBoxLayout, QHBoxLayout, QPushButton,
+    QWidget, QLabel, QScrollArea, QGridLayout, QSizePolicy, QLineEdit
+)
+from PyQt6.QtGui import QIcon, QFont
+from PyQt6.QtCore import Qt, pyqtSignal, QObject
+import webview
 
 from utils.constants import APPLICATION_NAME, DATA_KEYS, EXE_KEYS, DATA_HEADINGS, EXE_HEADINGS, APP_ICON_PATH
 from utils.helpers import confirm
@@ -19,8 +22,8 @@ from ui.components.data_table import build_data_table
 class Editor(QMainWindow):
     """Editor window for data and executable configuration."""
     
-    def __init__(self, editor_type: str, parent, load_data_func, save_data_func, 
-                 get_struc_func, refresh_tab_func, pick_path_func, web_profile):
+    def __init__(self, editor_type: str, parent, load_data_func, save_data_func,
+                 get_struc_func, refresh_tab_func, pick_path_func):
         """
         Initialize editor window.
         
@@ -32,25 +35,32 @@ class Editor(QMainWindow):
             get_struc_func: Function to get structure from layout
             refresh_tab_func: Function to refresh tabs
             pick_path_func: Function to pick file paths
-            web_profile: QWebEngineProfile for web views
         """
         super().__init__(parent)
+
         self.type = editor_type
         self.resize(1500, 900)
         self.setWindowTitle(f"{APPLICATION_NAME} Editor")
         self.setWindowIcon(QIcon(APP_ICON_PATH))
-        
         self.setAttribute(Qt.WidgetAttribute.WA_DeleteOnClose, True)
-        
+
         self.load_data_func = load_data_func
         self.save_data_func = save_data_func
         self.get_struc_func = get_struc_func
         self.refresh_tab_func = refresh_tab_func
         self.pick_path_func = pick_path_func
-        self.web_profile = web_profile
-        
+
         self.editor = QWidget(self)
         self.setCentralWidget(self.editor)
+
+        # preload webview (hidden)
+        self.web_capture = WebCaptureView(
+            parent=self,
+            refresh_tab_func=self.refresh_tab_func,
+            load_data_func=self.load_data_func,
+            save_data_func=self.save_data_func
+        )
+
         self._build_ui()
 
     def _build_ui(self):
@@ -149,13 +159,12 @@ class Editor(QMainWindow):
                 if self.type == "data":
                     view = create_data_view(parent_window, self.load_data_func, 
                                           self.save_data_func, self.get_struc_func,
-                                          self.refresh_tab_func, self.pick_path_func,
-                                          self.web_profile)
+                                          self.refresh_tab_func, self.pick_path_func)
                 else:
                     view = create_data_view(parent_window, self.load_data_func, 
                                           self.save_data_func, self.get_struc_func,
-                                          self.refresh_tab_func, self.pick_path_func,
-                                          self.web_profile, view_type="exe")
+                                          self.refresh_tab_func, self.pick_path_func, 
+                                          view_type="exe")
                 
                 self.refresh_tab_func(parent_window.tabs, index, view)  # pyright: ignore[reportAttributeAccessIssue, reportOptionalMemberAccess]
 
@@ -164,47 +173,72 @@ class Editor(QMainWindow):
         game_parts = re.split(" ", game)
         game_url = "+".join(game_parts)
         url = f"https://www.steamgriddb.com/search/grids?term={game_url}"
-        self.viewer = WebCaptureView(url, game, self, self.web_profile, self.refresh_tab_func, 
-                                     self.load_data_func, self.save_data_func)
-        self.viewer.setWindowModality(Qt.WindowModality.NonModal)
-        self.viewer.show()
+        
+        self.web_capture.open(game, url)
 
+class WebViewSignals(QObject):
+    """Qt signals for thread-safe communication."""
+    closed = pyqtSignal()
 
-class WebCaptureView(QMainWindow):
-    """Web view for capturing image URLs."""
-    
-    def __init__(self, url: str, game: str, parent, web_profile, refresh_tab_func, load_data_func, save_data_func):
-        super().__init__(parent)
-        self.game = game
+class WebCaptureView:
+    def __init__(self, parent, refresh_tab_func, load_data_func, save_data_func):
         self.parent_window = parent
-        self.web_profile = web_profile
         self.refresh_tab_func = refresh_tab_func
         self.load_data_func = load_data_func
         self.save_data_func = save_data_func
-        
-        self.resize(1500, 900)
-        self.setWindowTitle("Copy Image Address")
-        self.setWindowIcon(QIcon(APP_ICON_PATH))
 
-        self.viewer = QWebEngineView(self)
-        self.setCentralWidget(self.viewer)
+        self.game = None
+        self.window: webview.Window | None = None
 
-        self.page = QWebEnginePage(web_profile, self.viewer)
-        self.viewer.setPage(self.page)
+        self.signals = WebViewSignals()
+        self.signals.closed.connect(self._show_manual_window)
 
-        QTimer.singleShot(0, lambda: self.viewer.load(QUrl(url)))
+        self._start_engine()
 
-    def manual_download_window(self):
-        """Open manual download window."""
-        self.next = ManualDownloadWindow(self.game, self.parent_window, self.refresh_tab_func,
-                                         self.load_data_func, self.save_data_func)
-        self.next.show()
+    def _start_engine(self):
+        thread = threading.Thread(
+            name="MainThread",
+            target=self._create_hidden_window,
+            daemon=True
+        )
+        thread.start()
 
-    def closeEvent(self, event):
-        """Handle window close event."""
-        event.accept()
-        self.manual_download_window()
-        self.deleteLater()
+    def _create_hidden_window(self):
+        self.window = webview.create_window(
+            'Copy Image Address',
+            'about:blank',
+            width=1500,
+            height=900,
+            text_select=True,
+            hidden=True
+        )
+
+        self.window.events.closing += self._on_closing  # type: ignore
+        webview.start()
+
+    def open(self, game: str, url: str):
+        self.game = game
+
+        if self.window:
+            self.window.load_url(url)
+            self.window.show()
+
+    def _on_closing(self):
+        if self.window:
+            self.window.hide()
+
+        self.signals.closed.emit()
+        return False  # prevent destruction
+
+    def _show_manual_window(self):
+        manual = ManualDownloadWindow(
+            self.game, # type: ignore
+            self.parent_window,
+            self.refresh_tab_func,
+            self.load_data_func,
+            self.save_data_func
+        )
+        manual.show()
 
 
 class ManualDownloadWindow(QMainWindow):
@@ -269,7 +303,7 @@ class ManualDownloadWindow(QMainWindow):
             
             # Refresh exe tab (index 2)
             exe_view = create_data_view(parent_window, self.load_data_func, None, 
-                                       None, self.refresh_tab_func, None, None, "exe")
+                                       None, self.refresh_tab_func, None, "exe")
             self.refresh_tab_func(parent_window.tabs, 2, exe_view)  # pyright: ignore[reportAttributeAccessIssue]
             
             # Refresh library tab (index 0)

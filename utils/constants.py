@@ -4,7 +4,7 @@ Application constants and configuration values.
 import os
 
 # Application metadata
-APPLICATION_NAME = "Steam Proto v1.0a"
+APPLICATION_NAME = "BDS Steam Proto v2.2"
 
 # File paths
 META_DEFAULT = os.path.join(os.getcwd(), "_metadata")

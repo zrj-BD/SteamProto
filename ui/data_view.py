@@ -12,7 +12,7 @@ from ui.components.data_table import build_data_table
 
 
 def create_data_view(parent_window, load_data_func, save_data_func, get_struc_func,
-                     refresh_tab_func, pick_path_func, web_profile, view_type="data"):
+                     refresh_tab_func, pick_path_func, view_type="data"):
     """
     Create a data view (either metadata or executable view).
     
@@ -23,7 +23,6 @@ def create_data_view(parent_window, load_data_func, save_data_func, get_struc_fu
         get_struc_func: Function to get structure from layout
         refresh_tab_func: Function to refresh tabs
         pick_path_func: Function to pick file paths
-        web_profile: QWebEngineProfile for web views
         view_type: Type of view ("data" or "exe")
         
     Returns:
@@ -31,17 +30,14 @@ def create_data_view(parent_window, load_data_func, save_data_func, get_struc_fu
     """
     if view_type == "data":
         return _create_metadata_view(parent_window, load_data_func, save_data_func,
-                                     get_struc_func, refresh_tab_func, pick_path_func,
-                                     web_profile)
+                                     get_struc_func, refresh_tab_func, pick_path_func)
     else:
         return _create_exe_view(parent_window, load_data_func, save_data_func,
-                               get_struc_func, refresh_tab_func, pick_path_func,
-                               web_profile)
+                               get_struc_func, refresh_tab_func, pick_path_func)
 
 
 def _create_metadata_view(parent_window, load_data_func, save_data_func,
-                          get_struc_func, refresh_tab_func, pick_path_func,
-                          web_profile):
+                          get_struc_func, refresh_tab_func, pick_path_func):
     """Create the metadata data view."""
     items = load_data_func(["meta", "recent"])
 
@@ -55,8 +51,7 @@ def _create_metadata_view(parent_window, load_data_func, save_data_func,
     btn_edit = QPushButton("Edit")
     btn_edit.clicked.connect(lambda: _make_editor(parent_window, "data", load_data_func,
                                                    save_data_func, get_struc_func,
-                                                   refresh_tab_func, pick_path_func,
-                                                   web_profile))
+                                                   refresh_tab_func, pick_path_func))
     btn_edit.setFixedWidth(100)
     button_row.addWidget(btn_edit)
     
@@ -67,8 +62,7 @@ def _create_metadata_view(parent_window, load_data_func, save_data_func,
         lambda: refresh_tab_func(parent_window.tabs, 1, 
                                 create_data_view(parent_window, load_data_func,
                                                save_data_func, get_struc_func,
-                                               refresh_tab_func, pick_path_func,
-                                               web_profile, "data"))
+                                               refresh_tab_func, pick_path_func, "data"))
     )
     
     btn_update = QPushButton("Update")
@@ -81,8 +75,7 @@ def _create_metadata_view(parent_window, load_data_func, save_data_func,
         refresh_tab_func(parent_window.tabs, 1, 
                         create_data_view(parent_window, load_data_func,
                                        save_data_func, get_struc_func,
-                                       refresh_tab_func, pick_path_func,
-                                       web_profile, "data"))
+                                       refresh_tab_func, pick_path_func, "data"))
     
     btn_update.clicked.connect(update_action)
     
@@ -96,8 +89,7 @@ def _create_metadata_view(parent_window, load_data_func, save_data_func,
         refresh_tab_func(parent_window.tabs, 1, 
                         create_data_view(parent_window, load_data_func,
                                        save_data_func, get_struc_func,
-                                       refresh_tab_func, pick_path_func,
-                                       web_profile, "data"))
+                                       refresh_tab_func, pick_path_func, "data"))
     
     btn_scan.clicked.connect(scan_action)
     
@@ -113,8 +105,7 @@ def _create_metadata_view(parent_window, load_data_func, save_data_func,
         refresh_tab_func(parent_window.tabs, 1, 
                         create_data_view(parent_window, load_data_func,
                                        save_data_func, get_struc_func,
-                                       refresh_tab_func, pick_path_func,
-                                       web_profile, "data"))
+                                       refresh_tab_func, pick_path_func, "data"))
     
     btn_rescan.clicked.connect(
         lambda: confirm(
@@ -162,8 +153,7 @@ def _create_metadata_view(parent_window, load_data_func, save_data_func,
 
 
 def _create_exe_view(parent_window, load_data_func, save_data_func,
-                    get_struc_func, refresh_tab_func, pick_path_func,
-                    web_profile):
+                    get_struc_func, refresh_tab_func, pick_path_func):
     """Create the executable data view."""
     items = load_data_func(["ui"])
 
@@ -178,8 +168,7 @@ def _create_exe_view(parent_window, load_data_func, save_data_func,
     btn_edit = QPushButton("Edit")
     btn_edit.clicked.connect(lambda: _make_editor(parent_window, "exe", load_data_func,
                                                    save_data_func, get_struc_func,
-                                                   refresh_tab_func, pick_path_func,
-                                                   web_profile))
+                                                   refresh_tab_func, pick_path_func))
     btn_edit.setFixedWidth(100)
     button_row.addWidget(btn_edit)
     
@@ -190,8 +179,7 @@ def _create_exe_view(parent_window, load_data_func, save_data_func,
         lambda: refresh_tab_func(parent_window.tabs, 2,
                                 create_data_view(parent_window, load_data_func,
                                                save_data_func, get_struc_func,
-                                               refresh_tab_func, pick_path_func,
-                                               web_profile, "exe"))
+                                               refresh_tab_func, pick_path_func, "exe"))
     )
     
     button_row.setAlignment(Qt.AlignmentFlag.AlignLeft)
@@ -231,11 +219,11 @@ def _create_exe_view(parent_window, load_data_func, save_data_func,
 
 
 def _make_editor(parent_window, editor_type, load_data_func, save_data_func,
-                get_struc_func, refresh_tab_func, pick_path_func, web_profile):
+                get_struc_func, refresh_tab_func, pick_path_func):
     """Create and show an editor window."""
     from ui.editor_window import Editor
     parent_window.editor = Editor(
         editor_type, parent_window, load_data_func, save_data_func,
-        get_struc_func, refresh_tab_func, pick_path_func, web_profile
+        get_struc_func, refresh_tab_func, pick_path_func
     )
     parent_window.editor.show()

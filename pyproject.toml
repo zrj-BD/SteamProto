@@ -1,0 +1,11 @@
+[build-system]
+requires = [""]
+build-backend = ""
+[project]
+name = "BDS-SteamProto"
+version = "v2.1.1"
+authors = [{"name" = "BDS zrj", "email" = "copilotbusiness0@gmail.com"}]
+description = "Steam-like application for managing games"
+license = { text = "MIT" }
+readme = "README.md"
+requires-python = ">=3.9"

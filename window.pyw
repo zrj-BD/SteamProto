@@ -5,9 +5,6 @@ import sys
 import os
 import argparse
 from PyQt6.QtWidgets import QApplication
-from PyQt6.QtWebEngineCore import QWebEngineProfile
-
-from PyQt6.QtWebEngineWidgets import QWebEngineView
 
 # Import modules
 import web
@@ -68,21 +65,6 @@ def handle_automatic_scans(args):
         )
 
 
-def setup_web_profile():
-    """Set up and configure the web engine profile."""
-    profile = QWebEngineProfile("main")
-    profile.setHttpCacheType(QWebEngineProfile.HttpCacheType.MemoryHttpCache)
-    profile.setPersistentCookiesPolicy(
-        QWebEngineProfile.PersistentCookiesPolicy.NoPersistentCookies
-    )
-    profile.setHttpUserAgent(
-        "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
-        "AppleWebKit/537.36 (KHTML, like Gecko) "
-        "Chrome/120.0.0.0 Safari/537.36"
-    )
-    return profile
-
-
 def main():
     """Main application entry point."""
     # Parse arguments
@@ -97,9 +79,6 @@ def main():
     
     # Create Qt application
     app = QApplication(sys.argv)
-    
-    # Set up web profile
-    web_profile = setup_web_profile()
     
     # Get theme manager
     theme_manager = get_theme_manager()
@@ -122,7 +101,6 @@ def main():
         theme_manager=theme_manager,
         refresh_tab_func=refresh_tab,
         pick_path_func=pick_path,
-        web_profile=web_profile
     )
     
     window.show()
