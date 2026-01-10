@@ -12,3 +12,5 @@ DONE - Add Integration to get images
 - architecture
 DONE - settings via config.json
 DONE - application design template, possibly QML template later on
+- fix the massive issues
+- finish the settings exclusion dir list

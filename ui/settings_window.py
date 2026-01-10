@@ -95,6 +95,8 @@ class Settings(QMainWindow):
             label.setFixedSize(200, 50)
             layout.addWidget(label, row, 0)
             
+            widget = None
+
             # Widget based on type
             if setting_type == "toggle":
                 widget = self._create_toggle_widget(key, current_value)
@@ -174,24 +176,18 @@ class Settings(QMainWindow):
         """Handler for toggle button state changes."""
         toggle_colors = self.theme_manager.get_toggle_colors()
         button_default_colors = self.theme_manager._button_palette
-        
-        button.set_bg_color(toggle_colors["bg_color"])
-        button.set_active_color(toggle_colors["active_color"])
 
         if key == "design":
-            button.set_circle_color(toggle_colors["circle_color"])
             self.theme = state
             self.theme_manager.set_theme(self.theme, self.theme_on)
             self._update_all_toggle_colors()
         elif key == "theme_activated":
-            button.set_circle_color(
-                button_default_colors["button_on"] if state 
-                else button_default_colors["button_off"]
-            )
             self.theme_on = state
             self.theme_manager.set_theme(self.theme, self.theme_on)
             self._update_all_toggle_colors()
         else:
+            button.set_bg_color(toggle_colors["bg_color"])
+            button.set_active_color(toggle_colors["active_color"])
             button.set_circle_color(
                 button_default_colors["button_on"] if state 
                 else button_default_colors["button_off"]
@@ -209,7 +205,7 @@ class Settings(QMainWindow):
                     widget.set_bg_color(toggle_colors["bg_color"])
                     widget.set_active_color(toggle_colors["active_color"])
                     widget.set_circle_color(toggle_colors["circle_color"])
-                else:
+                elif key != "design":
                     widget.set_bg_color(toggle_colors["bg_color"])
                     widget.set_active_color(toggle_colors["active_color"])
                     widget.set_circle_color(

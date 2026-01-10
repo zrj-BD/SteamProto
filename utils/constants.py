@@ -4,7 +4,9 @@ Application constants and configuration values.
 import os
 
 # Application metadata
-APPLICATION_NAME = "BDS Steam Proto v2.2"
+NAME = "BDS Steam Proto"
+VERSION = "2.2.1"
+APPLICATION_NAME = NAME + VERSION
 
 # File paths
 META_DEFAULT = os.path.join(os.getcwd(), "_metadata")
@@ -38,6 +40,7 @@ SETTINGS_CONFIG = [
     {"key": "scan_frequency", "type": "select", "label": "Scan Frequency", "default": "weekly", "options": ["daily", "weekly", "biweekly", "monthly"]},
     {"key": "theme_activated", "type": "toggle", "label": "Newer Design", "default": True},
     {"key": "design", "type": "toggle", "label": "Design", "default": False},
+    {"key": "skipped_dirs", "type": "list-dirs", "label": "Directories to Skip"}
 ]
 
 # Data keys

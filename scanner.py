@@ -10,6 +10,9 @@ import re
 from typing import Dict, List, Any, Optional, Set, Tuple, DefaultDict
 from collections import defaultdict
 import time 
+
+from utils.constants import SETTINGS_FILE_DEFAULT, META_DEFAULT
+
 # Simple, explicit mappings (defaults).
 DEFAULT_SEARCHABLE_EXTS = [".txt", ".ini"]
 
@@ -139,7 +142,7 @@ def save_metadata_outputs(meta_dir: str, meta1: Dict[str, Any], meta2: Dict[str,
         json.dump(meta2, fh, indent=2, ensure_ascii=True)
 
 
-def collect_roots(base: str, skip_dirs: Optional[Set[str]] = None) -> DefaultDict[str, List[Tuple[str, List[str]]]]:
+def collect_roots(base: str, skip_dirs: Optional[List[str]] = None) -> DefaultDict[str, List[Tuple[str, List[str]]]]:
     """
     Walk base and group roots/files per immediate child folder (top_key).
     Returns mapping: top_key -> list of (root_path, files_in_root)
@@ -147,7 +150,7 @@ def collect_roots(base: str, skip_dirs: Optional[Set[str]] = None) -> DefaultDic
     NOTE: do not create a special "_root" key for files directly in base (we skip rel==".")
     """
     if skip_dirs is None:
-        skip_dirs = {"_metadata"}
+        skip_dirs = ["_metadata", os.getcwd()]
     groups: DefaultDict[str, List[Tuple[str, List[str]]]] = defaultdict(list)
     for root, dirs, files in os.walk(base):
         # prevent descending into metadata output folder
@@ -324,12 +327,15 @@ def main():
     cfg = load_config(args.config) if args.config else {}
     content_maps, filename_maps, extension_maps, searchable_exts = compile_mappings(cfg)
 
-    meta_dir = args.out if args.out else os.path.abspath("_metadata")
+    meta_dir = args.out if args.out else META_DEFAULT
     program_dir = normalize_path(os.path.dirname(__file__))
     existing_meta1, existing_meta2 = load_existing_metadatas(meta_dir)
 
+    skipped_dirs = [os.path.basename(meta_dir), os.getcwd()]
+    skipped_dirs.append(load_config(SETTINGS_FILE_DEFAULT)["skipped_dirs"])
+
     # collect groups under base, skip metadata folder so we don't descend into it
-    groups = collect_roots(base, skip_dirs={os.path.basename(meta_dir)})
+    groups = collect_roots(base, skip_dirs=skipped_dirs)
 
     to_process: List[str] = []
     for top_key in groups.keys():
