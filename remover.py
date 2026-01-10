@@ -6,15 +6,22 @@ Used in Rescanning
 import os
 import argparse
 from typing import List
+import json
+from typing import Optional, Dict, Any
+from utils.constants import SETTINGS_FILE_DEFAULT, META_DEFAULT
+from scanner import load_config
 
 
-def find_markers(base: str, marker_name: str):
+def find_markers(base: str, marker_name: str, skippers):
     found: List[str]
     found = []
     for root, _, files in os.walk(base):
         for fn in files:
             if fn == marker_name:
                 found.append(os.path.join(root, fn))
+    for skipper in skippers:
+        if skipper in found:
+            found.remove(skipper)
     return found
 
 
@@ -37,7 +44,9 @@ def main():
     args = p.parse_args()
 
     base = os.path.abspath(args.dir)
-    markers = find_markers(base, args.marker)
+    skippers = [os.getcwd(), META_DEFAULT, ]
+    skippers.append(load_config(SETTINGS_FILE_DEFAULT).get("skipped_dirs")) # type: ignore
+    markers = find_markers(base, args.marker, skippers)
     if not markers:
         print("No marker files found.")
         return

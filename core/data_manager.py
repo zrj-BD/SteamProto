@@ -61,6 +61,26 @@ def save_data(og: Dict[str, Any], data: Dict[str, Any], file: str, args, type="m
         json.dump(write, fh, indent=2, ensure_ascii=True)
 
 
+def ui_updater(save_data_func, meta, dict_ui):
+    """
+    Update UI data.
+    
+    Args:
+        save_data_func: Function to save data
+        meta: metadata game names reference
+        dict_ui: current ui game names
+    """
+    write: Dict[str, Any] = dict_ui
+    for i in meta:
+        try: 
+            dict_ui[i]
+            pass
+        except KeyError:
+            write[i] = {}
+
+    save_data_func(None, write, "ui", "no-merge")
+
+
 def create_blank(loc: str):
     """
     Create a blank JSON file at the specified location.

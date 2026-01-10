@@ -90,3 +90,16 @@ class MainWindow(QMainWindow):
             self.get_struc_func, self.refresh_tab_func,
             self.pick_path_func, "exe"
         )
+
+    def refresh(self, type: int = None, full: bool = False):
+        """Refresh certain tab"""
+        if type == 0:
+            return self.refresh_tab_func(self.tabs, 0, self._create_library_tab())
+        if type == 1:
+            return self.refresh_tab_func(self.tabs, 1, self._create_data_tab())
+        if type == 2:
+            return self.refresh_tab_func(self.tabs, 2, self._create_exe_tab())
+        if full:
+            return (self.refresh_tab_func(self.tabs, 0, self._create_library_tab()),
+                    self.refresh_tab_func(self.tabs, 1, self._create_data_tab()),
+                    self.refresh_tab_func(self.tabs, 2, self._create_exe_tab()))

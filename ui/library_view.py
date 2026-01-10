@@ -59,6 +59,7 @@ def create_library_view(parent_window, load_data_func, save_data_func, theme_man
     
     btn_settings.clicked.connect(open_settings)
     ult.addLayout(button_row)
+    ult.setAlignment(Qt.AlignmentFlag.AlignTop)
 
     # Grid layout for game cards
     layout = QGridLayout()

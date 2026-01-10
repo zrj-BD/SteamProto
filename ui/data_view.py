@@ -40,6 +40,7 @@ def _create_metadata_view(parent_window, load_data_func, save_data_func,
                           get_struc_func, refresh_tab_func, pick_path_func):
     """Create the metadata data view."""
     items = load_data_func(["meta", "recent"])
+    ui = load_data_func(["ui"])
 
     ult = QVBoxLayout()
     ult.setContentsMargins(0, 0, 0, 0)
@@ -85,11 +86,14 @@ def _create_metadata_view(parent_window, load_data_func, save_data_func,
     
     def scan_action():
         import scanner
-        scanner.main()
+        new_ones = scanner.main()
         refresh_tab_func(parent_window.tabs, 1, 
                         create_data_view(parent_window, load_data_func,
                                        save_data_func, get_struc_func,
                                        refresh_tab_func, pick_path_func, "data"))
+        if new_ones:
+            from core.data_manager import ui_updater
+            ui_updater(save_data_func, items[0], ui[0])
     
     btn_scan.clicked.connect(scan_action)
     
@@ -155,7 +159,7 @@ def _create_metadata_view(parent_window, load_data_func, save_data_func,
 def _create_exe_view(parent_window, load_data_func, save_data_func,
                     get_struc_func, refresh_tab_func, pick_path_func):
     """Create the executable data view."""
-    items = load_data_func(["ui"])
+    items = load_data_func(["meta", "ui"])
 
     ult = QVBoxLayout()
     ult.setContentsMargins(0, 0, 0, 0)
@@ -181,7 +185,21 @@ def _create_exe_view(parent_window, load_data_func, save_data_func,
                                                save_data_func, get_struc_func,
                                                refresh_tab_func, pick_path_func, "exe"))
     )
-    
+
+    btn_update = QPushButton("Update")
+    btn_update.setFixedWidth(100)
+    button_row.addWidget(btn_update)
+
+    def update_action():
+        from core.data_manager import ui_updater
+        ui_updater(save_data_func, items[0], items[1])
+        refresh_tab_func(parent_window.tabs, 2,
+                            create_data_view(parent_window, load_data_func,
+                                            save_data_func, get_struc_func,
+                                            refresh_tab_func, pick_path_func, "exe"))
+
+    btn_update.clicked.connect(update_action)
+                               
     button_row.setAlignment(Qt.AlignmentFlag.AlignLeft)
     ult.addLayout(button_row)
 
@@ -202,7 +220,7 @@ def _create_exe_view(parent_window, load_data_func, save_data_func,
         layout.addWidget(label, 0, i)
 
     # Build data table
-    build_data_table(EXE_KEYS, layout, (items[0],), "show", None)  # pyright: ignore[reportArgumentType]
+    build_data_table(EXE_KEYS, layout, (items[1],), "show", None)  # pyright: ignore[reportArgumentType]
     
     # Scroll area
     scroll = QScrollArea()

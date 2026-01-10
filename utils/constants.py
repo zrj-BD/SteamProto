@@ -5,8 +5,8 @@ import os
 
 # Application metadata
 NAME = "BDS Steam Proto"
-VERSION = "2.2.1"
-APPLICATION_NAME = NAME + VERSION
+VERSION = "2.3a"
+APPLICATION_NAME = NAME + " v" + VERSION
 
 # File paths
 META_DEFAULT = os.path.join(os.getcwd(), "_metadata")

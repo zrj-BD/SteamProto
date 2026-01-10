@@ -332,7 +332,7 @@ def main():
     existing_meta1, existing_meta2 = load_existing_metadatas(meta_dir)
 
     skipped_dirs = [os.path.basename(meta_dir), os.getcwd()]
-    skipped_dirs.append(load_config(SETTINGS_FILE_DEFAULT)["skipped_dirs"])
+    skipped_dirs.append(load_config(SETTINGS_FILE_DEFAULT).get("skipped_dirs"))
 
     # collect groups under base, skip metadata folder so we don't descend into it
     groups = collect_roots(base, skip_dirs=skipped_dirs)
@@ -346,6 +346,9 @@ def main():
         if not args.force and top_folder_is_marked(base, top_key, args.marker_name):
             continue
         to_process.append(top_key)
+
+    #debug_test
+    #to_process = ["Slay The Princess"]
 
     for tk in to_process:
         roots = groups.get(tk, [])
@@ -362,6 +365,7 @@ def main():
 
     print(f"Processed {len(to_process)} new folders. Total entries now: {len(existing_meta1)}")
     print(f"Metadata written to {meta_dir}/metadata.json and {meta_dir}/metadata_fix.json")
+    return to_process
 
 
 if __name__ == "__main__":

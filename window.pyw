@@ -36,22 +36,6 @@ def parse_arguments():
     return parser.parse_args()
 
 
-def ensure_data_files_exist(args):
-    """Ensure all required data files exist."""
-    # Create metadata if it doesn't exist
-    if not os.path.exists(args.metadata):
-        scanner.main()
-        web.main()
-    
-    # Create other files if they don't exist
-    if not os.path.exists(args.uidata):
-        create_blank(args.uidata)
-    if not os.path.exists(args.settingsdata):
-        create_blank(args.settingsdata)
-    if not os.path.exists(args.statedata):
-        create_blank(args.statedata)
-
-
 def handle_automatic_scans(args):
     """Handle automatic scanning based on settings."""
     settings_data = load_data(["settings"], args)[0]
@@ -70,10 +54,7 @@ def main():
     # Parse arguments
     global args
     args = parse_arguments()
-    
-    # Ensure data files exist
-    ensure_data_files_exist(args)
-    
+
     # Handle automatic scans
     handle_automatic_scans(args)
     
@@ -102,7 +83,21 @@ def main():
         refresh_tab_func=refresh_tab,
         pick_path_func=pick_path,
     )
-    
+
+    if not os.path.exists(args.metadata):
+        scanner.main()
+        web.main()
+        from core.data_manager import ui_updater
+        create_blank(args.uidata)
+        games = load_data_wrapper(["meta"])[0]
+        ui_updater(save_data_wrapper, games, {})
+
+        create_blank(args.settingsdata)
+
+        create_blank(args.statedata)
+
+        window.refresh(full=True)
+
     window.show()
     sys.exit(app.exec())
 
