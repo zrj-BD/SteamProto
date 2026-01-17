@@ -11,7 +11,7 @@ An Application to easily start Games not obtained via a Launcher. A Launcher rep
   - [Guide](#guide)
     - [Library](#library)
     - [Data](#data)
-    - [Settings](#Settings)
+    - [Settings](#settings)
   - [License](#license)
 
 ## Features
@@ -88,4 +88,5 @@ In the Settings you can configure wether
 
 ## License
 
-This project is licensed under the MIT License. Refer to License.txt.
+Copyright © 2026 BDS
+This work is licensed under the Creative Commons Attribution-NonCommercial-ShareAlike 4.0 International License.

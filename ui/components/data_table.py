@@ -79,8 +79,8 @@ def build_data_table(
                         
                     if mode == "edit":
                         label = QWidget()
-                        label.setContentsMargins(0, 0, 0, 0)
                         label_layout = QHBoxLayout()
+                        label_layout.setContentsMargins(0, 0, 0, 0)
                         pix = CHECK_PIX if os.path.exists(f"data/imgs/{i}.png") else X_PIX
                         image = QLabel()
                         image.setPixmap(pix)
@@ -106,8 +106,7 @@ def build_data_table(
                             label = QLineEdit("")
                         label.setMaximumWidth(200)
                         
-                if not (k == "png" and mode == "edit"):
-                    label.setFixedHeight(40)
+                label.setFixedHeight(40)
                 layout.addWidget(label, n, p)
                 p += 1
                 

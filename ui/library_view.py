@@ -36,9 +36,7 @@ def create_library_view(parent_window, load_data_func, save_data_func, theme_man
     button_row.addWidget(btn_refresh)
     
     def refresh_library():
-        from utils.helpers import refresh_tab
-        refresh_tab(parent_window.tabs, 0, 
-                   create_library_view(parent_window, load_data_func, save_data_func, theme_manager))
+        parent_window.refresh(type=0)
     
     btn_refresh.clicked.connect(refresh_library)
     
@@ -50,10 +48,9 @@ def create_library_view(parent_window, load_data_func, save_data_func, theme_man
     
     def open_settings():
         from ui.settings_window import Settings
-        from utils.helpers import refresh_tab
         parent_window.settings = Settings(
             parent_window, load_data_func, save_data_func,
-            theme_manager, refresh_tab
+            theme_manager
         )
         parent_window.settings.show()
     

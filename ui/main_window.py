@@ -79,27 +79,32 @@ class MainWindow(QMainWindow):
         """Create the data/metadata tab."""
         return create_data_view(
             self, self.load_data_func, self.save_data_func,
-            self.get_struc_func, self.refresh_tab_func,
-            self.pick_path_func, "data"
+            self.get_struc_func, self.pick_path_func, "data"
         )
 
     def _create_exe_tab(self):
         """Create the executable data tab."""
         return create_data_view(
             self, self.load_data_func, self.save_data_func,
-            self.get_struc_func, self.refresh_tab_func,
-            self.pick_path_func, "exe"
+            self.get_struc_func, self.pick_path_func, "exe"
         )
 
-    def refresh(self, type: int = None, full: bool = False):
-        """Refresh certain tab"""
+    def refresh(self, type: int = None, full: bool = False) -> None:
+        """
+        Refresh certain tab
+        ---
+        Args:
+            type: tab window to update - 
+            0 = library, 1 = data, 2 = exe
+            full: all tab windows updated
+        """
         if type == 0:
-            return self.refresh_tab_func(self.tabs, 0, self._create_library_tab())
+            self.refresh_tab_func(self.tabs, 0, self._create_library_tab())
         if type == 1:
-            return self.refresh_tab_func(self.tabs, 1, self._create_data_tab())
+            self.refresh_tab_func(self.tabs, 1, self._create_data_tab())
         if type == 2:
-            return self.refresh_tab_func(self.tabs, 2, self._create_exe_tab())
+            self.refresh_tab_func(self.tabs, 2, self._create_exe_tab())
         if full:
-            return (self.refresh_tab_func(self.tabs, 0, self._create_library_tab()),
-                    self.refresh_tab_func(self.tabs, 1, self._create_data_tab()),
-                    self.refresh_tab_func(self.tabs, 2, self._create_exe_tab()))
+            self.refresh_tab_func(self.tabs, 0, self._create_library_tab())
+            self.refresh_tab_func(self.tabs, 1, self._create_data_tab())
+            self.refresh_tab_func(self.tabs, 2, self._create_exe_tab())

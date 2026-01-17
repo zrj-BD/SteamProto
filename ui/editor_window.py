@@ -23,7 +23,7 @@ class Editor(QMainWindow):
     """Editor window for data and executable configuration."""
     
     def __init__(self, editor_type: str, parent, load_data_func, save_data_func,
-                 get_struc_func, refresh_tab_func, pick_path_func):
+                 get_struc_func, pick_path_func):
         """
         Initialize editor window.
         
@@ -33,7 +33,6 @@ class Editor(QMainWindow):
             load_data_func: Function to load data
             save_data_func: Function to save data
             get_struc_func: Function to get structure from layout
-            refresh_tab_func: Function to refresh tabs
             pick_path_func: Function to pick file paths
         """
         super().__init__(parent)
@@ -47,8 +46,8 @@ class Editor(QMainWindow):
         self.load_data_func = load_data_func
         self.save_data_func = save_data_func
         self.get_struc_func = get_struc_func
-        self.refresh_tab_func = refresh_tab_func
         self.pick_path_func = pick_path_func
+        self.parent_window = parent
 
         self.editor = QWidget(self)
         self.setCentralWidget(self.editor)
@@ -56,7 +55,6 @@ class Editor(QMainWindow):
         # preload webview (hidden)
         self.web_capture = WebCaptureView(
             parent=self,
-            refresh_tab_func=self.refresh_tab_func,
             load_data_func=self.load_data_func,
             save_data_func=self.save_data_func
         )
@@ -145,28 +143,14 @@ class Editor(QMainWindow):
     def updater(self):
         """Update parent window when closing."""
         self.close()
-        if self.parent():
-            parent_window = self.parent()
-            if hasattr(parent_window, 'tabs'):
-                if self.type == "data": 
-                    index = 1
-                elif self.type == "exe": 
-                    index = 2
-                else:
-                    return
-                
-                from ui.data_view import create_data_view
-                if self.type == "data":
-                    view = create_data_view(parent_window, self.load_data_func, 
-                                          self.save_data_func, self.get_struc_func,
-                                          self.refresh_tab_func, self.pick_path_func)
-                else:
-                    view = create_data_view(parent_window, self.load_data_func, 
-                                          self.save_data_func, self.get_struc_func,
-                                          self.refresh_tab_func, self.pick_path_func, 
-                                          view_type="exe")
-                
-                self.refresh_tab_func(parent_window.tabs, index, view)  # pyright: ignore[reportAttributeAccessIssue, reportOptionalMemberAccess]
+        if self.type == "data": 
+            index = 1
+        elif self.type == "exe": 
+            index = 2
+        else:
+            return
+            
+        self.parent_window.refresh(type=index)  
 
     def pick_img_view(self, game):
         """Open web view to pick game image."""
@@ -181,9 +165,8 @@ class WebViewSignals(QObject):
     closed = pyqtSignal()
 
 class WebCaptureView:
-    def __init__(self, parent, refresh_tab_func, load_data_func, save_data_func):
+    def __init__(self, parent, load_data_func, save_data_func):
         self.parent_window = parent
-        self.refresh_tab_func = refresh_tab_func
         self.load_data_func = load_data_func
         self.save_data_func = save_data_func
 
@@ -234,7 +217,6 @@ class WebCaptureView:
         manual = ManualDownloadWindow(
             self.game, # type: ignore
             self.parent_window,
-            self.refresh_tab_func,
             self.load_data_func,
             self.save_data_func
         )
@@ -244,12 +226,12 @@ class WebCaptureView:
 class ManualDownloadWindow(QMainWindow):
     """Window for manually entering image URL."""
     
-    def __init__(self, game: str, parent, refresh_tab_func, load_data_func, save_data_func):
+    def __init__(self, game: str, parent, load_data_func, save_data_func):
         super().__init__(parent)
         self.game = game
-        self.refresh_tab_func = refresh_tab_func
         self.load_data_func = load_data_func
         self.save_data_func = save_data_func
+        self.parent_window = parent
         
         self.resize(300, 200)
         self.setWindowTitle("Paste Image Address")
@@ -296,16 +278,5 @@ class ManualDownloadWindow(QMainWindow):
     def updater(self):
         """Update parent window."""
         self.close()
-        parent_window = self.parent()
-        if parent_window and hasattr(parent_window, 'tabs'):
-            from ui.data_view import create_data_view
-            from ui.library_view import create_library_view
-            
-            # Refresh exe tab (index 2)
-            exe_view = create_data_view(parent_window, self.load_data_func, None, 
-                                       None, self.refresh_tab_func, None, "exe")
-            self.refresh_tab_func(parent_window.tabs, 2, exe_view)  # pyright: ignore[reportAttributeAccessIssue]
-            
-            # Refresh library tab (index 0)
-            library_view = create_library_view(parent_window, self.load_data_func, self.save_data_func, None)
-            self.refresh_tab_func(parent_window.tabs, 0, library_view)  # pyright: ignore[reportAttributeAccessIssue]
+        self.parent_window.refresh(type=2)
+        self.parent_window.refresh(type=0)

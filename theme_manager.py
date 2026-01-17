@@ -118,6 +118,7 @@ class ThemeManager(QObject):
             border: 1px solid {palette["border"]};
             border-radius: 4px;
             padding: 5px 15px;
+            margin: 0px 1px;
             min-height: 25px;
         }}
         

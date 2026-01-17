@@ -15,7 +15,7 @@ from utils.helpers import confirm
 class Settings(QMainWindow):
     """Settings window for application configuration."""
     
-    def __init__(self, parent, load_data_func, save_data_func, theme_manager, refresh_tab_func):
+    def __init__(self, parent, load_data_func, save_data_func, theme_manager):
         """
         Initialize settings window.
         
@@ -24,7 +24,6 @@ class Settings(QMainWindow):
             load_data_func: Function to load data
             save_data_func: Function to save data
             theme_manager: Theme manager instance
-            refresh_tab_func: Function to refresh tabs
         """
         super().__init__(parent)
         self.resize(1500, 900)
@@ -39,7 +38,6 @@ class Settings(QMainWindow):
         self.theme_manager = theme_manager
         self.load_data_func = load_data_func
         self.save_data_func = save_data_func
-        self.refresh_tab_func = refresh_tab_func
         
         self.main_window = self._build_settings_ui()
         self.setCentralWidget(self.main_window)
@@ -181,10 +179,12 @@ class Settings(QMainWindow):
             self.theme = state
             self.theme_manager.set_theme(self.theme, self.theme_on)
             self._update_all_toggle_colors()
+            self.parent_window.refresh(full=True)
         elif key == "theme_activated":
             self.theme_on = state
             self.theme_manager.set_theme(self.theme, self.theme_on)
             self._update_all_toggle_colors()
+            self.parent_window.refresh(full=True)
         else:
             button.set_bg_color(toggle_colors["bg_color"])
             button.set_active_color(toggle_colors["active_color"])
@@ -216,12 +216,7 @@ class Settings(QMainWindow):
     def updater(self):
         """Update parent window when closing."""
         self.theme_manager.set_theme(self.loaded_settings_data["design"], self.loaded_settings_data["theme_activated"])
-        if self.parent_window and hasattr(self.parent_window, 'tabs'):
-            from ui.library_view import create_library_view
-            self.refresh_tab_func(
-                self.parent_window.tabs, 0, 
-                create_library_view(self.parent_window, self.load_data_func, self.save_data_func, self.theme_manager)
-            )
+        self.parent_window.refresh(full=True)
 
     def closeEvent(self, event):
         """Handle window close event."""
