@@ -5,7 +5,7 @@ import os
 
 # Application metadata
 NAME = "BDS Steam Proto"
-VERSION = "2.3a"
+VERSION = "2.3.1"
 APPLICATION_NAME = NAME + " v" + VERSION
 
 # File paths

@@ -27,25 +27,28 @@ def should_run_scan(settings_data: Dict[str, Any], state_data: Dict[str, Any]) -
     last_scan_date_str = str(last_scan_date_val) if last_scan_date_val else ""
     has_not_scanned_today = last_scan_date_str != today_str
     
-    if scan_frequency == "daily":
-        return has_not_scanned_today
-        
-    elif scan_frequency == "weekly":
-        return today.weekday() == 6 and has_not_scanned_today
-            
-    elif scan_frequency == "biweekly":
+    def check_last_scan(days):
         if last_scan_date_str:
             try:
                 last_scan_date = datetime.strptime(last_scan_date_str, "%Y-%m-%d").date()
                 days_since_scan = (today - last_scan_date).days
-                return days_since_scan >= 14
+                return days_since_scan >= days
             except (ValueError, TypeError):
                 return True
         else:
             return True
+
+    if scan_frequency == "daily":
+        return has_not_scanned_today
+        
+    elif scan_frequency == "weekly":
+        return check_last_scan(7)
+            
+    elif scan_frequency == "biweekly":
+        return check_last_scan(14)
             
     elif scan_frequency == "monthly":
-        return today.day == 1 and has_not_scanned_today
+        return check_last_scan(28)
     
     return False
 

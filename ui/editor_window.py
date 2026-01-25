@@ -147,6 +147,7 @@ class Editor(QMainWindow):
             index = 1
         elif self.type == "exe": 
             index = 2
+            self.parent_window.refresh(type=0)
         else:
             return
             

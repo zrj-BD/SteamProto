@@ -2,5 +2,5 @@
   "automatic_scans": true,
   "design": false,
   "scan_frequency": "weekly",
-  "theme_activated": false
+  "theme_activated": true
 }
