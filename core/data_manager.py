@@ -70,13 +70,17 @@ def ui_updater(save_data_func, meta, dict_ui):
         meta: metadata game names reference
         dict_ui: current ui game names
     """
-    write: Dict[str, Any] = dict_ui
+    write: Dict[str, Any] = dict_ui.copy()
     for i in meta:
-        try: 
-            dict_ui[i]
+        if i in dict_ui:
             pass
-        except KeyError:
+        else:
             write[i] = {}
+    for i in dict_ui:
+        if i in meta:
+            pass
+        else:
+            write.pop(i)
 
     save_data_func(None, write, "ui", "no-merge")
 

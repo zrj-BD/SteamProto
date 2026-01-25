@@ -44,7 +44,7 @@ def main():
     args = p.parse_args()
 
     base = os.path.abspath(args.dir)
-    skippers = [os.getcwd(), META_DEFAULT, ]
+    skippers = [os.getcwd(), META_DEFAULT]
     skippers.append(load_config(SETTINGS_FILE_DEFAULT).get("skipped_dirs")) # type: ignore
     markers = find_markers(base, args.marker, skippers)
     if not markers:

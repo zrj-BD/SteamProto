@@ -8,13 +8,14 @@ from PyQt6.QtWidgets import QGridLayout, QLabel, QLineEdit, QPushButton, QWidget
 from PyQt6.QtGui import QPixmap
 from PyQt6.QtCore import Qt
 
+from utils.helpers import pick_path
+
 def build_data_table(
     keys: Tuple[List[str], List[str]], 
     layout: QGridLayout, 
     files: Tuple[Dict[str, Dict[str, Any]], Optional[Dict[str, Dict[str, Any]]]], 
     mode: str, 
     window: Optional[QWidget],
-    pick_path_func=None,
 ):
     """
     Build a data table in a grid layout.
@@ -25,7 +26,6 @@ def build_data_table(
         files: Tuple of data dictionaries
         mode: "edit" or "show"
         window: Parent window widget
-        pick_path_func: Function to pick file paths (for edit mode)
     """
 
 
@@ -67,8 +67,7 @@ def build_data_table(
                             label = QPushButton(files[para][i][k])  # pyright: ignore[reportOptionalSubscript]
                         except Exception:
                             label = QPushButton(None)
-                        if pick_path_func:
-                            label.clicked.connect(lambda checked, folder=i, l=label, w=window: pick_path_func(w, folder, l))
+                        label.clicked.connect(lambda checked, folder=i, l=label, w=window: l.setText(pick_path(w, folder))) # type: ignore
                             
                 elif k == "png":
                     from ui.components.pixmaps import CHECK_PIX, X_PIX

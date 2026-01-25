@@ -14,7 +14,7 @@ class MainWindow(QMainWindow):
     """Main application window with tabbed interface."""
     
     def __init__(self, load_data_func, save_data_func, get_struc_func,
-                 theme_manager, refresh_tab_func, pick_path_func):
+                 theme_manager, refresh_tab_func):
         """
         Initialize main window.
         
@@ -24,7 +24,6 @@ class MainWindow(QMainWindow):
             get_struc_func: Function to get structure from layout
             theme_manager: Theme manager instance
             refresh_tab_func: Function to refresh tabs
-            pick_path_func: Function to pick file paths
         """
         super().__init__()
         self.resize(1500, 900)
@@ -36,7 +35,6 @@ class MainWindow(QMainWindow):
         self.get_struc_func = get_struc_func
         self.theme_manager = theme_manager
         self.refresh_tab_func = refresh_tab_func
-        self.pick_path_func = pick_path_func
         
         # Load and apply initial theme
         settings_data = load_data_func(["settings"])[0]
@@ -79,14 +77,14 @@ class MainWindow(QMainWindow):
         """Create the data/metadata tab."""
         return create_data_view(
             self, self.load_data_func, self.save_data_func,
-            self.get_struc_func, self.pick_path_func, "data"
+            self.get_struc_func, "data"
         )
 
     def _create_exe_tab(self):
         """Create the executable data tab."""
         return create_data_view(
             self, self.load_data_func, self.save_data_func,
-            self.get_struc_func, self.pick_path_func, "exe"
+            self.get_struc_func, "exe"
         )
 
     def refresh(self, type: int = None, full: bool = False) -> None:

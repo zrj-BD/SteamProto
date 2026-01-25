@@ -16,7 +16,7 @@ from utils.constants import (
     METADATA_DEFAULT, RECENTS_FILE_DEFAULT, UI_FILE_DEFAULT,
     SETTINGS_FILE_DEFAULT, STATE_FILE_DEFAULT
 )
-from utils.helpers import refresh_tab, pick_path
+from utils.helpers import refresh_tab
 from ui.main_window import MainWindow
 
 
@@ -81,7 +81,6 @@ def main():
         get_struc_func=get_struc_wrapper,
         theme_manager=theme_manager,
         refresh_tab_func=refresh_tab,
-        pick_path_func=pick_path,
     )
 
     if not os.path.exists(args.metadata):

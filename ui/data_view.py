@@ -12,7 +12,7 @@ from ui.components.data_table import build_data_table
 
 
 def create_data_view(parent_window, load_data_func, save_data_func, get_struc_func,
-                     pick_path_func, view_type="data"):
+                     view_type="data"):
     """
     Create a data view (either metadata or executable view).
     
@@ -21,7 +21,6 @@ def create_data_view(parent_window, load_data_func, save_data_func, get_struc_fu
         load_data_func: Function to load data
         save_data_func: Function to save data
         get_struc_func: Function to get structure from layout
-        pick_path_func: Function to pick file paths
         view_type: Type of view ("data" or "exe")
         
     Returns:
@@ -29,14 +28,14 @@ def create_data_view(parent_window, load_data_func, save_data_func, get_struc_fu
     """
     if view_type == "data":
         return _create_metadata_view(parent_window, load_data_func, save_data_func,
-                                     get_struc_func, pick_path_func)
+                                     get_struc_func)
     else:
         return _create_exe_view(parent_window, load_data_func, save_data_func,
-                               get_struc_func, pick_path_func)
+                               get_struc_func)
 
 
 def _create_metadata_view(parent_window, load_data_func, save_data_func,
-                          get_struc_func, pick_path_func):
+                          get_struc_func):
     """Create the metadata data view."""
     items = load_data_func(["meta", "recent"])
     ui = load_data_func(["ui"])
@@ -50,8 +49,7 @@ def _create_metadata_view(parent_window, load_data_func, save_data_func,
     
     btn_edit = QPushButton("Edit")
     btn_edit.clicked.connect(lambda: _make_editor(parent_window, "data", load_data_func,
-                                                   save_data_func, get_struc_func,
-                                                   pick_path_func))
+                                                   save_data_func, get_struc_func))
     btn_edit.setFixedWidth(100)
     button_row.addWidget(btn_edit)
     
@@ -144,7 +142,7 @@ def _create_metadata_view(parent_window, load_data_func, save_data_func,
 
 
 def _create_exe_view(parent_window, load_data_func, save_data_func,
-                    get_struc_func, pick_path_func):
+                    get_struc_func):
     """Create the executable data view."""
     items = load_data_func(["meta", "ui"])
 
@@ -158,8 +156,7 @@ def _create_exe_view(parent_window, load_data_func, save_data_func,
     
     btn_edit = QPushButton("Edit")
     btn_edit.clicked.connect(lambda: _make_editor(parent_window, "exe", load_data_func,
-                                                   save_data_func, get_struc_func,
-                                                   pick_path_func))
+                                                   save_data_func, get_struc_func))
     btn_edit.setFixedWidth(100)
     button_row.addWidget(btn_edit)
     
@@ -218,11 +215,11 @@ def _create_exe_view(parent_window, load_data_func, save_data_func,
 
 
 def _make_editor(parent_window, editor_type, load_data_func, save_data_func,
-                get_struc_func, pick_path_func):
+                get_struc_func):
     """Create and show an editor window."""
     from ui.editor_window import Editor
     parent_window.editor = Editor(
-        editor_type, parent_window, load_data_func, save_data_func,
-        get_struc_func, pick_path_func
+        editor_type, parent_window, load_data_func,
+        save_data_func, get_struc_func
     )
     parent_window.editor.show()

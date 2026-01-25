@@ -8,10 +8,10 @@ import threading
 
 from PyQt6.QtWidgets import (
     QMainWindow, QVBoxLayout, QHBoxLayout, QPushButton,
-    QWidget, QLabel, QScrollArea, QGridLayout, QSizePolicy, QLineEdit
+    QWidget, QLabel, QScrollArea, QGridLayout, QSizePolicy, QLineEdit, QSpacerItem
 )
 from PyQt6.QtGui import QIcon, QFont
-from PyQt6.QtCore import Qt, pyqtSignal, QObject
+from PyQt6.QtCore import Qt, pyqtSignal, QObject, QEvent
 import webview
 
 from utils.constants import APPLICATION_NAME, DATA_KEYS, EXE_KEYS, DATA_HEADINGS, EXE_HEADINGS, APP_ICON_PATH
@@ -19,11 +19,36 @@ from utils.helpers import confirm
 from ui.components.data_table import build_data_table
 
 
+class ClickableLabel(QLabel):
+    """Custom label that tracks mouse clicks for row selection."""
+    
+    def __init__(self, text, game_name, selected_rows, remove_btn, editor):
+        super().__init__(text)
+        self.game_name = game_name
+        self.selected_rows = selected_rows
+        self.remove_btn = remove_btn
+        self.editor = editor
+    
+    def mousePressEvent(self, ev):
+        """Handle mouse click to toggle selection."""
+        if self.game_name in self.selected_rows:
+            # Deselect
+            self.selected_rows.remove(self.game_name)
+            self.setStyleSheet("")
+        else:
+            # Select
+            self.selected_rows.add(self.game_name)
+            self.setStyleSheet("background-color: #4CAF50; color: white;")
+        
+        # Update button state
+        self.remove_btn.setEnabled(len(self.selected_rows) > 0)
+
+
 class Editor(QMainWindow):
     """Editor window for data and executable configuration."""
     
     def __init__(self, editor_type: str, parent, load_data_func, save_data_func,
-                 get_struc_func, pick_path_func):
+                 get_struc_func):
         """
         Initialize editor window.
         
@@ -33,7 +58,6 @@ class Editor(QMainWindow):
             load_data_func: Function to load data
             save_data_func: Function to save data
             get_struc_func: Function to get structure from layout
-            pick_path_func: Function to pick file paths
         """
         super().__init__(parent)
 
@@ -46,7 +70,6 @@ class Editor(QMainWindow):
         self.load_data_func = load_data_func
         self.save_data_func = save_data_func
         self.get_struc_func = get_struc_func
-        self.pick_path_func = pick_path_func
         self.parent_window = parent
 
         self.editor = QWidget(self)
@@ -83,6 +106,9 @@ class Editor(QMainWindow):
         ult = QVBoxLayout()
         ult.setContentsMargins(0, 0, 0, 0)
 
+        # Track selected rows
+        selected_rows = set()
+
         # Button row
         button_row = QHBoxLayout()
         button_row.setSpacing(0)
@@ -96,6 +122,79 @@ class Editor(QMainWindow):
         btn_save = QPushButton("Save")
         btn_save.setFixedWidth(100)
         button_row.addWidget(btn_save)
+        # Connect save button
+        def save_action():
+            self.save_data_func(items[0], self.get_struc_func(keys[0], layout, items), save_key, "no_merge")
+        
+        btn_save.clicked.connect(
+            lambda: (confirm(parent=self, message="Save changes?", 
+                           action=save_action, default="Yes"), self.updater())
+        )
+
+        btn_add = QPushButton("Add")
+        btn_add.setFixedWidth(100)
+        button_row.insertSpacing(2, 10)
+        button_row.addWidget(btn_add)
+        # Connect Add Entry Button
+        def add_entry():
+            from utils.helpers import pick_path
+            entry = pick_path(self.parent_window, os.path.dirname(os.getcwd()), "dir") # type: ignore
+            if entry:
+                import scanner
+                scanner.main(folder=entry)
+                from core.data_manager import ui_updater
+                meta = self.load_data_func(["meta", "ui"])
+                ui_updater(self.save_data_func, meta[0], meta[1])
+                self.parent_window.refresh(full=True)
+                self.close()
+                from ui.data_view import _make_editor
+                _make_editor(self.parent_window, self.type, self.load_data_func,
+                             self.save_data_func, self.get_struc_func)
+
+        btn_add.clicked.connect(add_entry)
+
+        btn_remove = QPushButton("Remove")
+        btn_remove.setFixedWidth(100)
+        btn_remove.setEnabled(False)
+        btn_remove.setStyleSheet("""
+            QPushButton:disabled {
+                background-color: #333333;
+                color: #666666;
+                border: 1px solid #222222;
+            }
+        """)
+        button_row.addWidget(btn_remove)
+        ##Logic
+        def remove_entry():
+            if not selected_rows:
+                return
+            
+            # Load both metadata files
+            meta = self.load_data_func(["meta"])[0]
+            
+            # Remove selected items from both dictionaries
+            for game_name in selected_rows:
+                if game_name in meta:
+                    del meta[game_name]
+            
+            # Save the modified metadata
+            self.save_data_func(items[0], meta, "meta", "no_merge")
+            
+            # Update UI with ui_updater
+            from core.data_manager import ui_updater
+            ui_dict = self.load_data_func(["ui"])[0]
+            ui_updater(self.save_data_func, meta, ui_dict)
+            
+            # Refresh and close
+            self.parent_window.refresh(full=True)
+            self.close()
+
+            from ui.data_view import _make_editor
+            _make_editor(self.parent_window, self.type, self.load_data_func,
+                         self.save_data_func, self.get_struc_func)
+            
+        btn_remove.clicked.connect(remove_entry)
+
         button_row.setAlignment(Qt.AlignmentFlag.AlignLeft)
         ult.addLayout(button_row)
 
@@ -116,17 +215,30 @@ class Editor(QMainWindow):
             layout.addWidget(label, 0, i)
 
         # Build data table
-        build_data_table(keys, layout, items, "edit", self, 
-                        self.pick_path_func)
-
-        # Connect save button
-        def save_action():
-            self.save_data_func(items[0], self.get_struc_func(keys[0], layout, items), save_key, "no_merge")
+        build_data_table(keys, layout, items, "edit", self)
         
-        btn_save.clicked.connect(
-            lambda: (confirm(parent=self, message="Save changes?", 
-                           action=save_action, default="Yes"), self.updater())
-        )
+        # Make rows clickable for selection
+        row_num = 1
+        for game_name in items[0]:
+            # Get the game name label at column 0
+            name_widget = layout.itemAtPosition(row_num, 0)
+            if name_widget:
+                old_label = name_widget.widget()
+                if isinstance(old_label, QLabel) and not isinstance(old_label, ClickableLabel):
+                    # Replace with ClickableLabel
+                    layout.removeWidget(old_label)
+                    old_label.deleteLater()
+                    
+                    clickable_label = ClickableLabel(
+                        old_label.text(), 
+                        game_name, 
+                        selected_rows, 
+                        btn_remove, 
+                        self
+                    )
+                    clickable_label.setFixedHeight(40)
+                    layout.addWidget(clickable_label, row_num, 0)
+            row_num += 1
         
         # Scroll area
         scroll = QScrollArea()
@@ -140,6 +252,7 @@ class Editor(QMainWindow):
         scroll.setWidget(page)
         return scroll
     
+
     def updater(self):
         """Update parent window when closing."""
         self.close()

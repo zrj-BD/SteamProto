@@ -47,23 +47,24 @@ def confirm(parent: QWidget, message: str, action: Callable, default: str):
         action()
 
 
-def pick_path(window: QWidget, folder: str, label):
+def pick_path(window: QWidget, folder: str, type="exe"):
     """
-    Open a file dialog to pick an executable file.
+    Open a file or directory dialog based on type.
+    """
+    # Define start path
+    start_path = os.path.join(os.path.dirname(os.getcwd()), folder)
     
-    Args:
-        window: Parent window
-        folder: Default folder to open
-        label: Label widget to update with selected path
-    """
-    path, _ = QFileDialog.getOpenFileName(
-        window,
-        "Select EXE",
-        os.path.join(os.path.dirname(os.getcwd()), folder),
-        "Executable Files (*.exe);;All Files (*)"
-    )
-    if path:
-        label.setText(path)
+    if type == "exe":
+        title = "Select EXE"
+        file_filter = "Executable Files (*.exe);;All Files (*)"
+        path, _ = QFileDialog.getOpenFileName(window, title, start_path, file_filter)
+    
+    elif type == "dir":
+        title = "Select Game Dir"
+        # getExistingDirectory returns only the path string, not a tuple
+        path = os.path.relpath(QFileDialog.getExistingDirectory(window, title, start_path), start_path)
+
+    return path
 
 
 def run_exe(exe: str, parent_window: Optional[QMainWindow] = None):

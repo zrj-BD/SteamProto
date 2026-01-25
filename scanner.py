@@ -313,7 +313,7 @@ def top_folder_is_marked(base: str, top_key: str, marker_name: str) -> bool:
     return os.path.exists(path)
 
 
-def main():
+def main(folder=None):
     parser = argparse.ArgumentParser(description="Scan folders, extract folder-level metadata and write two JSONs.")
     parser.add_argument("-d", "--dir", required=False, help="Base directory to scan (default: parent dir)")
     parser.add_argument("-c", "--config", help="Optional JSON config to override mappings")
@@ -349,6 +349,9 @@ def main():
 
     #debug_test
     #to_process = ["Slay The Princess"]
+
+    if folder:
+        to_process = [folder]
 
     for tk in to_process:
         roots = groups.get(tk, [])
