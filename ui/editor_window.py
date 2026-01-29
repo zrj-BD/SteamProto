@@ -8,11 +8,11 @@ import threading
 
 from PyQt6.QtWidgets import (
     QMainWindow, QVBoxLayout, QHBoxLayout, QPushButton,
-    QWidget, QLabel, QScrollArea, QGridLayout, QSizePolicy, QLineEdit, QSpacerItem
+    QWidget, QLabel, QScrollArea, QGridLayout, QSizePolicy, QLineEdit, QDialog
 )
 from PyQt6.QtGui import QIcon, QFont
-from PyQt6.QtCore import Qt, pyqtSignal, QObject, QEvent
-import webview
+from PyQt6.QtCore import Qt
+import webbrowser
 
 from utils.constants import APPLICATION_NAME, DATA_KEYS, EXE_KEYS, DATA_HEADINGS, EXE_HEADINGS, APP_ICON_PATH
 from utils.helpers import confirm
@@ -138,8 +138,12 @@ class Editor(QMainWindow):
         # Connect Add Entry Button
         def add_entry():
             from utils.helpers import pick_path
-            entry = pick_path(self.parent_window, os.path.dirname(os.getcwd()), "dir") # type: ignore
-            if entry:
+            try:
+                entry = pick_path(self.parent_window, os.path.dirname(os.getcwd()), "dir") # type: ignore
+                do_it = True
+            except ValueError:
+                do_it = False
+            if do_it:
                 import scanner
                 scanner.main(folder=entry)
                 from core.data_manager import ui_updater
@@ -274,123 +278,88 @@ class Editor(QMainWindow):
         
         self.web_capture.open(game, url)
 
-class WebViewSignals(QObject):
-    """Qt signals for thread-safe communication."""
-    closed = pyqtSignal()
+class WebCaptureView(QDialog):
+    """Lightweight dialog for downloading game images from URL."""
 
-class WebCaptureView:
     def __init__(self, parent, load_data_func, save_data_func):
-        self.parent_window = parent
-        self.load_data_func = load_data_func
-        self.save_data_func = save_data_func
-
-        self.game = None
-        self.window: webview.Window | None = None
-
-        self.signals = WebViewSignals()
-        self.signals.closed.connect(self._show_manual_window)
-
-        self._start_engine()
-
-    def _start_engine(self):
-        thread = threading.Thread(
-            name="MainThread",
-            target=self._create_hidden_window,
-            daemon=True
-        )
-        thread.start()
-
-    def _create_hidden_window(self):
-        self.window = webview.create_window(
-            'Copy Image Address',
-            'about:blank',
-            width=1500,
-            height=900,
-            text_select=True,
-            hidden=True
-        )
-
-        self.window.events.closing += self._on_closing  # type: ignore
-        webview.start()
-
-    def open(self, game: str, url: str):
-        self.game = game
-
-        if self.window:
-            self.window.load_url(url)
-            self.window.show()
-
-    def _on_closing(self):
-        if self.window:
-            self.window.hide()
-
-        self.signals.closed.emit()
-        return False  # prevent destruction
-
-    def _show_manual_window(self):
-        manual = ManualDownloadWindow(
-            self.game, # type: ignore
-            self.parent_window,
-            self.load_data_func,
-            self.save_data_func
-        )
-        manual.show()
-
-
-class ManualDownloadWindow(QMainWindow):
-    """Window for manually entering image URL."""
-    
-    def __init__(self, game: str, parent, load_data_func, save_data_func):
         super().__init__(parent)
-        self.game = game
+        self.parent_window = parent
         self.load_data_func = load_data_func
         self.save_data_func = save_data_func
-        self.parent_window = parent
+        self.game = None
         
-        self.resize(300, 200)
-        self.setWindowTitle("Paste Image Address")
+        self.resize(400, 200)
+        self.setWindowTitle("Download Game Image")
         self.setWindowIcon(QIcon(APP_ICON_PATH))
-
-        self.setAttribute(Qt.WidgetAttribute.WA_DeleteOnClose, True)
-        self.enterer = QWidget(self)
-        self.setCentralWidget(self.enterer)
-
+        
         self._build_ui()
 
     def _build_ui(self):
         """Build the UI."""
-        mainlayout = QVBoxLayout(self.enterer)
-        mainlayout.setContentsMargins(10, 10, 10, 10)
+        layout = QVBoxLayout()
+        layout.setContentsMargins(10, 10, 10, 10)
         
-        self.d_button = QPushButton("Download")
-        self.address_field = QLineEdit()
+        # Instructions
+        instructions = QLabel("1. Browser opened with image search\n2. Copy image URL and paste below\n3. Click Download")
+        layout.addWidget(instructions)
+        
+        # URL input field
+        self.url_field = QLineEdit()
+        self.url_field.setPlaceholderText("Paste image URL here (ends with .png or .jpg)")
+        layout.addWidget(self.url_field)
+        
+        # Buttons
+        button_layout = QHBoxLayout()
+        
+        btn_download = QPushButton("Download")
+        btn_download.clicked.connect(self._download)
+        button_layout.addWidget(btn_download)
+        
+        btn_cancel = QPushButton("Cancel")
+        btn_cancel.clicked.connect(self.close)
+        button_layout.addWidget(btn_cancel)
+        
+        layout.addLayout(button_layout)
+        self.setLayout(layout)
 
-        mainlayout.addWidget(self.address_field)
-        mainlayout.addWidget(self.d_button)
+    def open(self, game: str, url: str):
+        """Open browser and show dialog."""
+        self.game = game
+        self.url_field.clear()
+        
+        # Open URL in default browser
+        webbrowser.open(url)
+        
+        # Show this dialog
+        self.exec()
 
-        self.d_button.clicked.connect(self.download)
-
-        self.enterer.setLayout(mainlayout)
-
-    def download(self):
-        """Download image from URL."""
-        url = self.address_field.text().strip()
+    def _download(self):
+        """Download image from pasted URL."""
+        url = self.url_field.text().strip()
+        
+        if not url:
+            return
+        
         if not url.lower().endswith(".png") and not url.lower().endswith(".jpg"):
             return
         
+        if not self.game:
+            return
+        
         path = f"data/imgs/{self.game}.png"
-        if os.path.exists(path):
-            os.remove(path)
-        r = requests.get(url, timeout=15)
-        r.raise_for_status()
+        
+        try:
+            if os.path.exists(path):
+                os.remove(path)
+            r = requests.get(url, timeout=15)
+            r.raise_for_status()
 
-        with open(path, "wb") as f:
-            f.write(r.content)
-
-        self.updater()
-
-    def updater(self):
-        """Update parent window."""
-        self.close()
-        self.parent_window.refresh(type=2)
-        self.parent_window.refresh(type=0)
+            with open(path, "wb") as f:
+                f.write(r.content)
+            
+            # Close and update parent
+            self.close()
+            self.parent_window.parent_window.refresh(type=2)
+            self.parent_window.parent_window.refresh(type=0)
+        except Exception as e:
+            print(f"Error downloading image: {e}")

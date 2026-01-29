@@ -9,3 +9,5 @@ description = "Steam-like application for managing games"
 license = { text = "MIT" }
 readme = "README.md"
 requires-python = ">=3.9"
+
+##outdated

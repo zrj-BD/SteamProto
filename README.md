@@ -1,9 +1,9 @@
-# Steam Proto V1
+# Steam Proto V2.4
 
 An Application to easily start Games not obtained via a Launcher. A Launcher replacement.
 
 ## Table of Contents
-- [Steam Proto V1](#steam-proto-v1)
+- [Steam Proto V2.4](#steam-proto-v24)
   - [Table of Contents](#table-of-contents)
   - [Features](#features)
   - [Dependencies](#dependencies)

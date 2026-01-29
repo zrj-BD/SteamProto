@@ -215,7 +215,7 @@ class Settings(QMainWindow):
     
     def updater(self):
         """Update parent window when closing."""
-        self.theme_manager.set_theme(self.loaded_settings_data["design"], self.loaded_settings_data["theme_activated"])
+        self.theme_manager.set_theme(self.loaded_settings_data.get("design", False), self.loaded_settings_data.get("theme_activated", True))
         self.parent_window.refresh(full=True)
 
     def closeEvent(self, event):

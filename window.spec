@@ -21,7 +21,7 @@ exe = EXE(
     a.scripts,
     [],
     exclude_binaries=True,
-    name='BDS_SP_v2.2',
+    name='BDS_SP_v2.5',
     icon="icon.ico",
     debug=False,
     bootloader_ignore_signals=False,
@@ -41,5 +41,7 @@ coll = COLLECT(
     strip=False,
     upx=True,
     upx_exclude=[],
-    name='BDS_SP_v2.2',
+    name='BDS_SP_v2.5',
 )
+
+##next release 2.5

@@ -328,10 +328,10 @@ def main(folder=None):
     content_maps, filename_maps, extension_maps, searchable_exts = compile_mappings(cfg)
 
     meta_dir = args.out if args.out else META_DEFAULT
-    program_dir = normalize_path(os.path.dirname(__file__))
+    program_dir = normalize_path(os.getcwd())
     existing_meta1, existing_meta2 = load_existing_metadatas(meta_dir)
 
-    skipped_dirs = [os.path.basename(meta_dir), os.getcwd()]
+    skipped_dirs = [os.path.basename(meta_dir), program_dir]
     skipped_dirs.append(load_config(SETTINGS_FILE_DEFAULT).get("skipped_dirs"))
 
     # collect groups under base, skip metadata folder so we don't descend into it
