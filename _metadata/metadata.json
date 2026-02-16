@@ -29,11 +29,6 @@
     "emulator": "Goldberg",
     "date": 1767699143
   },
-  "The Farmer Was Replaced": {
-    "appid": "2060160",
-    "emulator": "REXA",
-    "date": 1767699143
-  },
   "Victoria 3": {
     "appid": "529340",
     "emulator": "RUNE",
@@ -60,5 +55,11 @@
     "appid": "322170",
     "emulator": "Goldberg",
     "date": 1767699143
+  },
+  "The Farmer Was Replaced": {
+    "emulator": "REXA",
+    "appid": "2060160",
+    "version": "2.1.0.0",
+    "date": 1771240251
   }
 }

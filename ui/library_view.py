@@ -3,7 +3,7 @@ Library view for displaying game cards.
 """
 from PyQt6.QtWidgets import (QVBoxLayout, QHBoxLayout, QPushButton, QWidget, 
                               QGridLayout, QScrollArea)
-from PyQt6.QtCore import Qt
+from PyQt6.QtCore import Qt, QCoreApplication
 
 from utils.constants import GAME_CARDS_PER_ROW, GAME_CARD_WIDTH, GAME_CARD_HEIGHT, GRID_SPACING
 from ui.components.game_card import GameCard
@@ -31,7 +31,7 @@ def create_library_view(parent_window, load_data_func, save_data_func, theme_man
     button_row = QHBoxLayout()
     button_row.setSpacing(0)
     
-    btn_refresh = QPushButton("Refresh")
+    btn_refresh = QPushButton(QCoreApplication.translate("Buttons", "Refresh"))
     btn_refresh.setFixedWidth(100)
     button_row.addWidget(btn_refresh)
     
@@ -42,7 +42,7 @@ def create_library_view(parent_window, load_data_func, save_data_func, theme_man
     
     button_row.addStretch(1)
     
-    btn_settings = QPushButton("Settings")
+    btn_settings = QPushButton(QCoreApplication.translate("Buttons", "Settings"))
     btn_settings.setFixedWidth(100)
     button_row.addWidget(btn_settings)
     

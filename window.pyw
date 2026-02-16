@@ -5,6 +5,7 @@ import sys
 import os
 import argparse
 from PyQt6.QtWidgets import QApplication
+from PyQt6.QtCore import QTranslator
 
 # Import modules
 import web
@@ -14,7 +15,7 @@ from core.data_manager import load_data, save_data, create_blank, get_struc
 from core.scan_scheduler import should_run_scan, execute_scan
 from utils.constants import (
     METADATA_DEFAULT, RECENTS_FILE_DEFAULT, UI_FILE_DEFAULT,
-    SETTINGS_FILE_DEFAULT, STATE_FILE_DEFAULT
+    SETTINGS_FILE_DEFAULT, STATE_FILE_DEFAULT, LANG_FOLDER
 )
 from utils.helpers import refresh_tab
 from ui.main_window import MainWindow
@@ -49,6 +50,13 @@ def handle_automatic_scans(args):
         )
 
 
+def load_translator(app, language):
+    translator = QTranslator()
+    translator.load(f"{LANG_FOLDER}translations_{language}.qm")
+    app.installTranslator(translator)
+    return translator
+
+
 def main():
     """Main application entry point."""
     # Parse arguments
@@ -61,6 +69,10 @@ def main():
     # Create Qt application
     app = QApplication(sys.argv)
     
+    #Get Language setting and load translator
+    language = load_data(["settings"], args)[0].get("language", "en")
+    translator = load_translator(app, language)
+
     # Get theme manager
     theme_manager = get_theme_manager()
     

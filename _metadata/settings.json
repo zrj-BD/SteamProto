@@ -1,6 +1,7 @@
 {
   "automatic_scans": true,
   "design": false,
-  "scan_frequency": "weekly",
-  "theme_activated": true
+  "scan_frequency": "7",
+  "theme_activated": true,
+  "language": "zh"
 }

@@ -11,7 +11,6 @@ from PyQt6_SwitchControl import SwitchControl
 from utils.constants import APPLICATION_NAME, SETTINGS_CONFIG, APP_ICON_PATH
 from utils.helpers import confirm
 
-
 class Settings(QMainWindow):
     """Settings window for application configuration."""
     
@@ -27,7 +26,7 @@ class Settings(QMainWindow):
         """
         super().__init__(parent)
         self.resize(1500, 900)
-        self.setWindowTitle(f"{APPLICATION_NAME} Settings")
+        self.setWindowTitle(f"{APPLICATION_NAME} {self.tr('Settings')}")
         self.setWindowIcon(QIcon(APP_ICON_PATH))
         
         self.setAttribute(Qt.WidgetAttribute.WA_DeleteOnClose, True)
@@ -58,12 +57,12 @@ class Settings(QMainWindow):
         button_row = QHBoxLayout()
         button_row.setContentsMargins(0, 0, 0, 0)
         
-        btn_exit = QPushButton("Exit")
+        btn_exit = QPushButton(self.tr("Exit"))
         btn_exit.clicked.connect(lambda: self.close())
         btn_exit.setFixedWidth(100)
         button_row.addWidget(btn_exit)
         
-        btn_save = QPushButton("Save")
+        btn_save = QPushButton(self.tr("Save"))
         btn_save.setFixedWidth(100)
         button_row.addWidget(btn_save)
         button_row.setAlignment(Qt.AlignmentFlag.AlignLeft)
@@ -81,12 +80,15 @@ class Settings(QMainWindow):
         # Generate settings UI
         for row, setting_config in enumerate(SETTINGS_CONFIG):
             key = setting_config["key"]
-            label_text = setting_config["label"]
+            label_text = self.tr(str(setting_config["label"]))
             setting_type = setting_config["type"]
             default_value = setting_config.get("default", False if setting_type == "toggle" else "")
             
             current_value = settings_data.get(key, default_value)
-            
+
+            if setting_type == "select":
+                current_value = setting_config.get("options", [])[setting_config.get("values", []).index(current_value)]
+
             # Label
             label = QLabel(label_text)
             label.setFont(bold_font)
@@ -97,7 +99,7 @@ class Settings(QMainWindow):
 
             # Widget based on type
             if setting_type == "toggle":
-                widget = self._create_toggle_widget(key, current_value)
+                widget = self._create_toggle_widget(key, current_value) # type: ignore
             elif setting_type == "text":
                 widget = self._create_text_widget(current_value)
             elif setting_type == "select":
@@ -158,6 +160,7 @@ class Settings(QMainWindow):
         """Create a dropdown select widget."""
         widget = QComboBox()
         options = setting_config.get("options", [])
+        
         widget.addItems(options)
         
         current_str = str(current_value) if current_value is not None else str(default_value)
@@ -239,6 +242,8 @@ class Settings(QMainWindow):
             elif setting_type == "text":
                 settings_dict[key] = str(widget.text())
             elif setting_type == "select":
-                settings_dict[key] = str(widget.currentText())
+                options = setting_config.get("options", [])
+
+                settings_dict[key] = setting_config.get("values", [])[options.index(widget.currentText())]
         
         return settings_dict

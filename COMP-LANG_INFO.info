@@ -1,0 +1,23 @@
+All files required for lang compiling:
+
+- ui/components/game_card.py
+- ui/components/data_table.py
+- ui/data_view.py
+- ui/editor_window.py
+- ui/library_view.py
+- ui/main_window.py
+- ui/settings_window.py
+- utils/constants.py
+
+compilation location:
+
+data/local/lang/
+
+type:
+
+pylupdate6 *.py -ts data/local/lang/translations_*.ts
+
+for *.py = all .py files listed here and, 
+for *.ts = all .ts files wanted
+
+pylupdate6 ui/components/game_card.py ui/components/data_table.py ui/data_view.py ui/editor_window.py ui/library_view.py ui/main_window.py ui/settings_window.py utils/constants.py -ts data/local/lang/translations_*.ts

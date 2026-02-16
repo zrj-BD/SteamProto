@@ -5,7 +5,7 @@ import os
 from typing import Optional, Callable
 from PyQt6.QtWidgets import QWidget, QVBoxLayout, QLabel, QPushButton
 from PyQt6.QtGui import QPixmap, QFont
-from PyQt6.QtCore import Qt
+from PyQt6.QtCore import Qt, QCoreApplication
 
 
 class GameCard(QWidget):
@@ -79,7 +79,7 @@ class GameCard(QWidget):
         name_label.setWordWrap(True)
         
         # Play button
-        play_button = QPushButton("Play")
+        play_button = QPushButton(QCoreApplication.translate("Buttons", "Play"))
         play_button.setFixedSize(100, 50)
         if self.theme_manager:
             play_button.setStyleSheet(self.theme_manager.get_play_button_style())

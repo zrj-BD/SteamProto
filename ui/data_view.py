@@ -4,7 +4,7 @@ Data view for displaying game metadata and executable information.
 from PyQt6.QtWidgets import (QVBoxLayout, QHBoxLayout, QPushButton, QWidget, 
                               QLabel, QScrollArea, QGridLayout, QSizePolicy)
 from PyQt6.QtGui import QFont
-from PyQt6.QtCore import Qt
+from PyQt6.QtCore import Qt, QCoreApplication
 
 from utils.constants import DATA_KEYS, EXE_KEYS, DATA_HEADINGS, EXE_HEADINGS
 from utils.helpers import confirm
@@ -47,20 +47,20 @@ def _create_metadata_view(parent_window, load_data_func, save_data_func,
     button_row = QHBoxLayout()
     button_row.setSpacing(0)
     
-    btn_edit = QPushButton("Edit")
+    btn_edit = QPushButton(QCoreApplication.translate("Buttons", "Edit"))
     btn_edit.clicked.connect(lambda: _make_editor(parent_window, "data", load_data_func,
                                                    save_data_func, get_struc_func))
     btn_edit.setFixedWidth(100)
     button_row.addWidget(btn_edit)
     
-    btn_refresh = QPushButton("Refresh")
+    btn_refresh = QPushButton(QCoreApplication.translate("Buttons", "Refresh"))
     btn_refresh.setFixedWidth(100)
     button_row.addWidget(btn_refresh)
     btn_refresh.clicked.connect(
         lambda: parent_window.refresh(type=1)
     )
     
-    btn_update = QPushButton("Update")
+    btn_update = QPushButton(QCoreApplication.translate("Buttons", "Update"))
     btn_update.setFixedWidth(100)
     button_row.addWidget(btn_update)
     
@@ -71,7 +71,7 @@ def _create_metadata_view(parent_window, load_data_func, save_data_func,
     
     btn_update.clicked.connect(update_action)
     
-    btn_scan = QPushButton("Scan")
+    btn_scan = QPushButton(QCoreApplication.translate("Buttons", "Scan"))
     btn_scan.setFixedWidth(100)
     button_row.addWidget(btn_scan)
     
@@ -85,7 +85,7 @@ def _create_metadata_view(parent_window, load_data_func, save_data_func,
     
     btn_scan.clicked.connect(scan_action)
     
-    btn_rescan = QPushButton("Rescan")
+    btn_rescan = QPushButton(QCoreApplication.translate("Buttons", "Rescan"))
     btn_rescan.setFixedWidth(100)
     button_row.addWidget(btn_rescan)
     
@@ -154,20 +154,20 @@ def _create_exe_view(parent_window, load_data_func, save_data_func,
     button_row.setSpacing(0)
     button_row.setContentsMargins(0, 0, 0, 0)
     
-    btn_edit = QPushButton("Edit")
+    btn_edit = QPushButton(QCoreApplication.translate("Buttons", "Edit"))
     btn_edit.clicked.connect(lambda: _make_editor(parent_window, "exe", load_data_func,
                                                    save_data_func, get_struc_func))
     btn_edit.setFixedWidth(100)
     button_row.addWidget(btn_edit)
     
-    btn_refresh = QPushButton("Refresh")
+    btn_refresh = QPushButton(QCoreApplication.translate("Buttons", "Refresh"))
     btn_refresh.setFixedWidth(100)
     button_row.addWidget(btn_refresh)
     btn_refresh.clicked.connect(
         lambda: parent_window.refresh(type=2)
     )
 
-    btn_update = QPushButton("Update")
+    btn_update = QPushButton(QCoreApplication.translate("Buttons", "Update"))
     btn_update.setFixedWidth(100)
     button_row.addWidget(btn_update)
 

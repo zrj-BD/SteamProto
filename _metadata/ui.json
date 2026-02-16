@@ -17,9 +17,6 @@
   "The Coffin of Andy and Leyley": {
     "exesrc": "D:\\Games\\The Coffin of Andy and Leyley\\Game.exe"
   },
-  "The Farmer Was Replaced": {
-    "exesrc": "D:/Games/The Farmer Was Replaced/TheFarmerWasReplaced.exe"
-  },
   "Victoria 3": {
     "exesrc": "D:/Games/Victoria 3/binaries/victoria3.exe"
   },
@@ -34,5 +31,6 @@
   },
   "Geometry Dash": {
     "exesrc": "D:/Games/Geometry Dash/Geometry Dash/GeometryDash.exe"
-  }
+  },
+  "The Farmer Was Replaced": {}
 }

@@ -2,7 +2,7 @@
 Theme Manager Module
 Handles dark/light mode theming for the Steam Proto application.
 """
-from typing import Dict, Any
+from typing import Dict
 from PyQt6.QtWidgets import QApplication
 from PyQt6.QtCore import QObject, pyqtSignal as Signal
 
@@ -117,7 +117,7 @@ class ThemeManager(QObject):
             color: {palette["text"]};
             border: 1px solid {palette["border"]};
             border-radius: 4px;
-            padding: 5px 15px;
+            padding: 5px 0px;
             margin: 0px 1px;
             min-height: 25px;
         }}

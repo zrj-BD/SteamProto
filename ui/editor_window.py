@@ -63,7 +63,7 @@ class Editor(QMainWindow):
 
         self.type = editor_type
         self.resize(1500, 900)
-        self.setWindowTitle(f"{APPLICATION_NAME} Editor")
+        self.setWindowTitle(f"{APPLICATION_NAME} {self.tr('Editor')}")
         self.setWindowIcon(QIcon(APP_ICON_PATH))
         self.setAttribute(Qt.WidgetAttribute.WA_DeleteOnClose, True)
 
@@ -114,12 +114,12 @@ class Editor(QMainWindow):
         button_row.setSpacing(0)
         button_row.setContentsMargins(0, 0, 0, 0)
         
-        btn_exit = QPushButton("Exit")
+        btn_exit = QPushButton(self.tr("Exit"))
         btn_exit.clicked.connect(lambda: self.updater())
         btn_exit.setFixedWidth(100)
         button_row.addWidget(btn_exit)
         
-        btn_save = QPushButton("Save")
+        btn_save = QPushButton(self.tr("Save"))
         btn_save.setFixedWidth(100)
         button_row.addWidget(btn_save)
         # Connect save button
@@ -131,7 +131,7 @@ class Editor(QMainWindow):
                            action=save_action, default="Yes"), self.updater())
         )
 
-        btn_add = QPushButton("Add")
+        btn_add = QPushButton(self.tr("Add"))
         btn_add.setFixedWidth(100)
         button_row.insertSpacing(2, 10)
         button_row.addWidget(btn_add)
@@ -157,7 +157,7 @@ class Editor(QMainWindow):
 
         btn_add.clicked.connect(add_entry)
 
-        btn_remove = QPushButton("Remove")
+        btn_remove = QPushButton(self.tr("Remove"))
         btn_remove.setFixedWidth(100)
         btn_remove.setEnabled(False)
         btn_remove.setStyleSheet("""
@@ -289,7 +289,7 @@ class WebCaptureView(QDialog):
         self.game = None
         
         self.resize(400, 200)
-        self.setWindowTitle("Download Game Image")
+        self.setWindowTitle(self.tr("Download Game Image"))
         self.setWindowIcon(QIcon(APP_ICON_PATH))
         
         self._build_ui()
@@ -300,22 +300,22 @@ class WebCaptureView(QDialog):
         layout.setContentsMargins(10, 10, 10, 10)
         
         # Instructions
-        instructions = QLabel("1. Browser opened with image search\n2. Copy image URL and paste below\n3. Click Download")
+        instructions = QLabel(self.tr("1. Browser opened with image search\n2. Copy image URL and paste below\n3. Click Download"))
         layout.addWidget(instructions)
         
         # URL input field
         self.url_field = QLineEdit()
-        self.url_field.setPlaceholderText("Paste image URL here (ends with .png or .jpg)")
+        self.url_field.setPlaceholderText(self.tr("Paste image URL here (ends with .png or .jpg)"))
         layout.addWidget(self.url_field)
         
         # Buttons
         button_layout = QHBoxLayout()
         
-        btn_download = QPushButton("Download")
+        btn_download = QPushButton(self.tr("Download"))
         btn_download.clicked.connect(self._download)
         button_layout.addWidget(btn_download)
         
-        btn_cancel = QPushButton("Cancel")
+        btn_cancel = QPushButton(self.tr("Cancel"))
         btn_cancel.clicked.connect(self.close)
         button_layout.addWidget(btn_cancel)
         

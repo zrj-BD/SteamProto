@@ -9,6 +9,8 @@ TODO:
 - game metadata advanced, sort by filters, acquire on web?
 - finish the settings exclusion dir list
 
+- fix language support
+
 DONE Add Integration to get images
 DONE EXE package
 DONE architecture

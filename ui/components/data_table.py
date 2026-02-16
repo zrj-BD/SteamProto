@@ -6,7 +6,7 @@ from datetime import datetime
 from typing import Dict, Any, List, Tuple, Optional
 from PyQt6.QtWidgets import QGridLayout, QLabel, QLineEdit, QPushButton, QWidget, QHBoxLayout
 from PyQt6.QtGui import QPixmap
-from PyQt6.QtCore import Qt
+from PyQt6.QtCore import Qt, QCoreApplication
 
 from utils.helpers import pick_path
 
@@ -83,7 +83,7 @@ def build_data_table(
                         pix = CHECK_PIX if os.path.exists(f"data/imgs/{i}.png") else X_PIX
                         image = QLabel()
                         image.setPixmap(pix)
-                        button = QPushButton("Change/Add")
+                        button = QPushButton(QCoreApplication.translate("Buttons", "Change/Add"))
                         try:
                             button.clicked.connect(lambda checked, game=i, w=window: w.pick_img_view(game))  # pyright: ignore[reportAttributeAccessIssue, reportOptionalMemberAccess]
                         except Exception:

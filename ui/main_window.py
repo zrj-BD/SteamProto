@@ -60,9 +60,9 @@ class MainWindow(QMainWindow):
         self.tabs.setTabPosition(QTabWidget.TabPosition.North)
         
         # Add tabs
-        self.tabs.addTab(self._create_library_tab(), "Library")
-        self.tabs.addTab(self._create_data_tab(), "Data")
-        self.tabs.addTab(self._create_exe_tab(), "Data 2")
+        self.tabs.addTab(self._create_library_tab(), self.tr("Library"))
+        self.tabs.addTab(self._create_data_tab(), self.tr("Data"))
+        self.tabs.addTab(self._create_exe_tab(), self.tr("Data (EXE)"))
         
         mainlayout = QVBoxLayout()
         mainlayout.setContentsMargins(0, 0, 0, 0)
