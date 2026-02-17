@@ -2,7 +2,6 @@
 Application constants and configuration values.
 """
 import os
-from PyQt6.QtCore import QCoreApplication
 
 # Application metadata
 NAME = "BDS Steam Proto"
@@ -40,11 +39,11 @@ STANDARD_BUTTON_WIDTH = 100
 
 # Settings configuration
 SETTINGS_CONFIG = [
-    {"key": "automatic_scans", "type": "toggle", "label": QCoreApplication.translate("Settings_options", "Automatic Scans"), "default": False},
-    {"key": "scan_frequency", "type": "select", "label": QCoreApplication.translate("Settings_options", "Scan Frequency"), "default": "7", "options": [QCoreApplication.translate("Options_scan", "daily"), QCoreApplication.translate("Options_scan", "weekly"), QCoreApplication.translate("Options_scan", "biweekly"), QCoreApplication.translate("Options_scan", "monthly")], "values": ["1", "7", "14", "30"]},
-    {"key": "theme_activated", "type": "toggle", "label": QCoreApplication.translate("Settings_options", "Newer Design"), "default": True},
-    {"key": "design", "type": "toggle", "label": QCoreApplication.translate("Settings_options", "Design"), "default": False},
-    {"key": "skipped_dirs", "type": "list-dirs", "label": QCoreApplication.translate("Settings_options", "Directories to Skip")},
+    {"key": "automatic_scans", "type": "toggle", "label": "Automatic Scans", "default": False},
+    {"key": "scan_frequency", "type": "select", "label": "Scan Frequency", "default": "7", "options": ["daily", "weekly", "biweekly", "monthly"], "values": ["1", "7", "14", "30"]},
+    {"key": "theme_activated", "type": "toggle", "label": "Newer Design", "default": True},
+    {"key": "design", "type": "toggle", "label": "Design", "default": False},
+    {"key": "skipped_dirs", "type": "list-dirs", "label": "Directories to Skip"},
     {"key": "language", "type": "select", "label": "Language", "default": "en", "options": ["English", "Deutsch", "中文", "Français", "Español", "Русский", "عربي"], "values": ["en", "de", "zh", "fr", "es", "ru", "ar"]}
 ]
 
@@ -60,9 +59,9 @@ EXE_KEYS = (
 )
 
 DATA_HEADINGS = [
-    QCoreApplication.translate("Headings", "Game"), QCoreApplication.translate("Headings", "AppID"),QCoreApplication.translate("Headings", "Emulator"), QCoreApplication.translate("Headings", "Last Build"), QCoreApplication.translate("Headings", "Last Date"), QCoreApplication.translate("Headings", "Newest Build"), QCoreApplication.translate("Headings", "Newest Date")
+    "Game", "AppID", "Emulator", "Last Build", "Last Date", "Newest Build", "Newest Date"
 ]
 
 EXE_HEADINGS = [
-    QCoreApplication.translate("Headings", "Game"), QCoreApplication.translate("Headings", "exesrc"), QCoreApplication.translate("Headings", "png"), "", "", "", ""
+    "Game", "exesrc", "png", "", "", "", ""
 ]

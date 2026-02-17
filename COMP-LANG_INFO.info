@@ -1,4 +1,4 @@
-All files required for lang compiling:
+All files that use translator:
 
 - ui/components/game_card.py
 - ui/components/data_table.py
@@ -7,17 +7,21 @@ All files required for lang compiling:
 - ui/library_view.py
 - ui/main_window.py
 - ui/settings_window.py
-- utils/constants.py
+- utils/helpers.py
 
 compilation location:
 
 data/local/lang/
 
-type:
+for every new entry put into:
 
-pylupdate6 *.py -ts data/local/lang/translations_*.ts
+trans_dummy.py
 
-for *.py = all .py files listed here and, 
-for *.ts = all .ts files wanted
+# structure:
+#
+# pylupdate6 trans_dummy.py -ts data/local/lang/*.ts
+# pylupdate6 trans_dummy.py -ts data/local/lang/*.ts -no-obsolete
 
-pylupdate6 ui/components/game_card.py ui/components/data_table.py ui/data_view.py ui/editor_window.py ui/library_view.py ui/main_window.py ui/settings_window.py utils/constants.py -ts data/local/lang/translations_*.ts
+approach: 
+just type 
+pylupdate6 --ts data/local/lang/en.ts --ts data/local/lang/de.ts --ts data/local/lang/fr.ts --ts data/local/lang/es.ts --ts data/local/lang/ar.ts --ts data/local/lang/ru.ts --ts data/local/lang/zh.ts trans_dummy.py

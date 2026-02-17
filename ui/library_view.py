@@ -42,7 +42,7 @@ def create_library_view(parent_window, load_data_func, save_data_func, theme_man
     
     button_row.addStretch(1)
     
-    btn_settings = QPushButton(QCoreApplication.translate("Buttons", "Settings"))
+    btn_settings = QPushButton(QCoreApplication.translate("Settings", "Settings")) # Using Settings / Settings translation
     btn_settings.setFixedWidth(100)
     button_row.addWidget(btn_settings)
     

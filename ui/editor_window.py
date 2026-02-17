@@ -11,7 +11,7 @@ from PyQt6.QtWidgets import (
     QWidget, QLabel, QScrollArea, QGridLayout, QSizePolicy, QLineEdit, QDialog
 )
 from PyQt6.QtGui import QIcon, QFont
-from PyQt6.QtCore import Qt
+from PyQt6.QtCore import Qt, QCoreApplication
 import webbrowser
 
 from utils.constants import APPLICATION_NAME, DATA_KEYS, EXE_KEYS, DATA_HEADINGS, EXE_HEADINGS, APP_ICON_PATH
@@ -114,12 +114,12 @@ class Editor(QMainWindow):
         button_row.setSpacing(0)
         button_row.setContentsMargins(0, 0, 0, 0)
         
-        btn_exit = QPushButton(self.tr("Exit"))
+        btn_exit = QPushButton(QCoreApplication.translate("Settings", "Exit"))
         btn_exit.clicked.connect(lambda: self.updater())
         btn_exit.setFixedWidth(100)
         button_row.addWidget(btn_exit)
         
-        btn_save = QPushButton(self.tr("Save"))
+        btn_save = QPushButton(QCoreApplication.translate("Settings", "Save"))
         btn_save.setFixedWidth(100)
         button_row.addWidget(btn_save)
         # Connect save button

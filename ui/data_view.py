@@ -119,7 +119,7 @@ def _create_metadata_view(parent_window, load_data_func, save_data_func,
     bold_font.setBold(True)
     
     for i, heading in enumerate(DATA_HEADINGS):
-        label = QLabel(heading)
+        label = QLabel(QCoreApplication.translate("Headings", heading))
         label.setFont(bold_font)
         label.setFixedHeight(30)
         layout.addWidget(label, 0, i)
@@ -192,7 +192,7 @@ def _create_exe_view(parent_window, load_data_func, save_data_func,
     bold_font.setBold(True)
     
     for i, heading in enumerate(EXE_HEADINGS):
-        label = QLabel(heading)
+        label = QLabel(QCoreApplication.translate("Headings", heading))
         label.setFont(bold_font)
         label.setFixedHeight(30)
         layout.addWidget(label, 0, i)

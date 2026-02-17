@@ -80,7 +80,7 @@ class Settings(QMainWindow):
         # Generate settings UI
         for row, setting_config in enumerate(SETTINGS_CONFIG):
             key = setting_config["key"]
-            label_text = self.tr(str(setting_config["label"]))
+            label_text = self.tr(setting_config["label"])
             setting_type = setting_config["type"]
             default_value = setting_config.get("default", False if setting_type == "toggle" else "")
             
@@ -88,6 +88,7 @@ class Settings(QMainWindow):
 
             if setting_type == "select":
                 current_value = setting_config.get("options", [])[setting_config.get("values", []).index(current_value)]
+                current_value = self.tr(current_value) if key != "language" else current_value
 
             # Label
             label = QLabel(label_text)
@@ -110,9 +111,16 @@ class Settings(QMainWindow):
 
         # Connect save button
         def save_and_update():
+            old_settings = self.loaded_settings_data.copy()
             new_settings = self.read_settings()
             self.save_data_func(self.loaded_settings_data, new_settings, "settings")
-            self.close()
+            if old_settings.get("language") != new_settings.get("language"):
+                from utils.helpers import restart_script
+                import os
+                script_path = os.path.join(os.path.dirname(__file__), "..", "window.pyw")
+                restart_script(script_path)
+            else: 
+                self.close()
         
         btn_save.clicked.connect(
             lambda: confirm(parent=self, message="Save changes?", 
@@ -160,7 +168,7 @@ class Settings(QMainWindow):
         """Create a dropdown select widget."""
         widget = QComboBox()
         options = setting_config.get("options", [])
-        
+        options = [self.tr(opt) for opt in options] if setting_config["key"] != "language" else options
         widget.addItems(options)
         
         current_str = str(current_value) if current_value is not None else str(default_value)
@@ -243,7 +251,7 @@ class Settings(QMainWindow):
                 settings_dict[key] = str(widget.text())
             elif setting_type == "select":
                 options = setting_config.get("options", [])
-
+                options = [self.tr(opt) for opt in options] if setting_config["key"] != "language" else options
                 settings_dict[key] = setting_config.get("values", [])[options.index(widget.currentText())]
         
         return settings_dict

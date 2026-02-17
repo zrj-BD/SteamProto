@@ -52,7 +52,7 @@ def handle_automatic_scans(args):
 
 def load_translator(app, language):
     translator = QTranslator()
-    translator.load(f"{LANG_FOLDER}translations_{language}.qm")
+    translator.load(f"{LANG_FOLDER}{language}.qm")
     app.installTranslator(translator)
     return translator
 
