@@ -138,11 +138,10 @@ class Editor(QMainWindow):
         # Connect Add Entry Button
         def add_entry():
             from utils.helpers import pick_path
-            try:
-                entry = pick_path(self.parent_window, os.path.dirname(os.getcwd()), "dir") # type: ignore
-                do_it = True
-            except ValueError:
-                do_it = False
+            # try:
+            entry, do_it = pick_path(self.parent_window, os.path.dirname(os.getcwd()), "dir") # type: ignore
+            # except ValueError:
+            #     do_it = False
             if do_it:
                 import scanner
                 scanner.main(folder=entry)

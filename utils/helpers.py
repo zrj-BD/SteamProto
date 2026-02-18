@@ -52,6 +52,8 @@ def confirm(parent: QWidget, message: str, action: Callable, default: str):
     if result == QMessageBox.StandardButton.Yes:
         action()
 
+    return result == QMessageBox.StandardButton.Yes
+
 
 def pick_path(window: QWidget, folder: str, type="exe"):
     """
@@ -63,14 +65,16 @@ def pick_path(window: QWidget, folder: str, type="exe"):
     if type == "exe":
         title = QCoreApplication.translate("PathDialog", "Select EXE")
         file_filter = "Executable Files (*.exe);;All Files (*)"
-        path, _ = QFileDialog.getOpenFileName(window, title, start_path, file_filter)
+        try: path, _ = QFileDialog.getOpenFileName(window, title, start_path, file_filter)
+        except ValueError: path = None
     
     elif type == "dir":
         title = QCoreApplication.translate("PathDialog", "Select Game Directory")
         # getExistingDirectory returns only the path string, not a tuple
-        path = os.path.relpath(QFileDialog.getExistingDirectory(window, title, start_path), start_path)
-
-    return path
+        try: path = os.path.relpath(QFileDialog.getExistingDirectory(window, title, start_path), start_path)
+        except ValueError: path = None
+    
+    return path, True if path is not None and path != "" else False
 
 
 def run_exe(exe: str, parent_window: Optional[QMainWindow] = None):

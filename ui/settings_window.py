@@ -5,7 +5,7 @@ from typing import Dict, Any
 from PyQt6.QtWidgets import (QMainWindow, QVBoxLayout, QHBoxLayout, QPushButton,
                               QWidget, QLabel, QLineEdit, QComboBox, QGridLayout, QSizePolicy, QListWidget, QListWidgetItem)
 from PyQt6.QtGui import QIcon, QFont
-from PyQt6.QtCore import Qt
+from PyQt6.QtCore import Qt, QCoreApplication
 from PyQt6_SwitchControl import SwitchControl
 
 from utils.constants import APPLICATION_NAME, SETTINGS_CONFIG, APP_ICON_PATH
@@ -116,14 +116,21 @@ class Settings(QMainWindow):
         def save_and_update():
             old_settings = self.loaded_settings_data.copy()
             new_settings = self.read_settings()
-            self.save_data_func(self.loaded_settings_data, new_settings, "settings")
             if old_settings.get("language") != new_settings.get("language"):
                 from utils.helpers import restart_script
                 import os
                 script_path = os.path.join(os.path.dirname(__file__), "..", "window.pyw")
-                restart_script(script_path)
+                def a(): return
+                lang_changed = confirm(self.parent_window, QCoreApplication.translate("msg", "These changes will require a reset to function."), a, "No")
+                print(lang_changed)
+                if not lang_changed:
+                    new_settings["language"] = old_settings["language"]
+                else:
+                    self.save_data_func(self.loaded_settings_data, new_settings, "settings")
+                    restart_script(script_path)
             else: 
                 self.close()
+            self.save_data_func(self.loaded_settings_data, new_settings, "settings")
         
         btn_save.clicked.connect(
             lambda: confirm(parent=self, message="Save changes?", 
@@ -244,10 +251,10 @@ class Settings(QMainWindow):
             # Get game directory (parent of working environment directory)
             game_dir = os.path.dirname(os.getcwd())
 
-            path = pick_path(self, game_dir, type="dir")
-            if path and path != game_dir:
+            path, selected = pick_path(self, game_dir, type="dir")
+            if selected and path != game_dir:
                 # Validate that folder is a direct child of game_dir
-                parent = os.path.dirname(path)
+                parent = os.path.dirname(path) # type: ignore
                 if parent != "":
                     return
 

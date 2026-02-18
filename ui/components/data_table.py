@@ -67,7 +67,11 @@ def build_data_table(
                             label = QPushButton(files[para][i][k])  # pyright: ignore[reportOptionalSubscript]
                         except Exception:
                             label = QPushButton(None)
-                        label.clicked.connect(lambda checked, folder=i, l=label, w=window: l.setText(pick_path(w, folder))) # type: ignore
+                        def path_func(w, f, l):
+                            path, do_it = pick_path(w, f)
+                            if do_it:
+                                l.setText(path)
+                        label.clicked.connect(lambda checked, folder=i, l=label, w=window: path_func(w, folder, l)) # type: ignore
                             
                 elif k == "png":
                     from ui.components.pixmaps import CHECK_PIX, X_PIX

@@ -126,12 +126,12 @@
 <context>
     <name>PathDialog</name>
     <message>
-        <location filename="../../../trans_dummy.py" line="74"/>
+        <location filename="../../../trans_dummy.py" line="75"/>
         <source>Select EXE</source>
         <translation>Seleccionar EXE</translation>
     </message>
     <message>
-        <location filename="../../../trans_dummy.py" line="75"/>
+        <location filename="../../../trans_dummy.py" line="76"/>
         <source>Select Game Directory</source>
         <translation>Seleccionar carpeta del juego</translation>
     </message>
@@ -262,6 +262,11 @@
         <location filename="../../../trans_dummy.py" line="65"/>
         <source>No</source>
         <translation>No</translation>
+    </message>
+    <message>
+        <location filename="../../../trans_dummy.py" line="66"/>
+        <source>These changes will require a reset to function.</source>
+        <translation>Estos cambios requerirán un reinicio</translation>
     </message>
 </context>
 </TS>

@@ -16,6 +16,7 @@ DONE application design template, possibly QML template later on
 
 Local TODO:
 - update README.md
+- fix .exe restart
 
 DONE finish the settings exclusion dir list
 DONE fix language support

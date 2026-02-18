@@ -1,9 +1,9 @@
-# Steam Proto V2.7
+# Steam Proto V2.7.1
 
 An Application to easily start Games not obtained via a Launcher. A Launcher replacement.
 
 ## Table of Contents
-- [Steam Proto V2.7](#steam-proto-v27)
+- [Steam Proto V2.7.1](#steam-proto-v271)
   - [Table of Contents](#table-of-contents)
   - [Features](#features)
   - [Dependencies](#dependencies)

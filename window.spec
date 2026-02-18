@@ -15,7 +15,7 @@ a = Analysis(
     optimize=0,
 )
 pyz = PYZ(a.pure)
-name = BDS_SP_v2.7
+name = 'BDS_SP_v2.7.1'
 
 exe = EXE(
     pyz,
@@ -44,5 +44,3 @@ coll = COLLECT(
     upx_exclude=[],
     name=name,
 )
-
-##next release 2.5

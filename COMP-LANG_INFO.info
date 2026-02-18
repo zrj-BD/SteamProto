@@ -23,5 +23,5 @@ trans_dummy.py
 # pylupdate6 trans_dummy.py -ts data/local/lang/*.ts -no-obsolete
 
 approach: 
-just type 
+just type (copy into pwsh)
 pylupdate6 --ts data/local/lang/en.ts --ts data/local/lang/de.ts --ts data/local/lang/fr.ts --ts data/local/lang/es.ts --ts data/local/lang/ar.ts --ts data/local/lang/ru.ts --ts data/local/lang/zh.ts trans_dummy.py
