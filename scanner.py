@@ -332,7 +332,7 @@ def main(folder=None):
     existing_meta1, existing_meta2 = load_existing_metadatas(meta_dir)
 
     skipped_dirs = [os.path.basename(meta_dir), program_dir]
-    skipped_dirs.append(load_config(SETTINGS_FILE_DEFAULT).get("skipped_dirs"))
+    skipped_dirs.extend(load_config(SETTINGS_FILE_DEFAULT).get("skipped_dirs", []))
 
     # collect groups under base, skip metadata folder so we don't descend into it
     groups = collect_roots(base, skip_dirs=skipped_dirs)

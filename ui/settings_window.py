@@ -2,14 +2,14 @@
 Settings window class.
 """
 from typing import Dict, Any
-from PyQt6.QtWidgets import (QMainWindow, QVBoxLayout, QHBoxLayout, QPushButton, 
-                              QWidget, QLabel, QLineEdit, QComboBox, QGridLayout, QSizePolicy)
+from PyQt6.QtWidgets import (QMainWindow, QVBoxLayout, QHBoxLayout, QPushButton,
+                              QWidget, QLabel, QLineEdit, QComboBox, QGridLayout, QSizePolicy, QListWidget, QListWidgetItem)
 from PyQt6.QtGui import QIcon, QFont
 from PyQt6.QtCore import Qt
 from PyQt6_SwitchControl import SwitchControl
 
 from utils.constants import APPLICATION_NAME, SETTINGS_CONFIG, APP_ICON_PATH
-from utils.helpers import confirm
+from utils.helpers import confirm, pick_path
 
 class Settings(QMainWindow):
     """Settings window for application configuration."""
@@ -76,14 +76,14 @@ class Settings(QMainWindow):
 
         bold_font = QFont()
         bold_font.setBold(True)
-        
+
         # Generate settings UI
         for row, setting_config in enumerate(SETTINGS_CONFIG):
             key = setting_config["key"]
             label_text = self.tr(setting_config["label"])
             setting_type = setting_config["type"]
             default_value = setting_config.get("default", False if setting_type == "toggle" else "")
-            
+
             current_value = settings_data.get(key, default_value)
 
             if setting_type == "select":
@@ -93,9 +93,10 @@ class Settings(QMainWindow):
             # Label
             label = QLabel(label_text)
             label.setFont(bold_font)
-            label.setFixedSize(200, 50)
-            layout.addWidget(label, row, 0)
-            
+            label.setFixedSize(200, 35)
+            label.setAlignment(Qt.AlignmentFlag.AlignVCenter)
+            layout.addWidget(label, row, 0, alignment=Qt.AlignmentFlag.AlignTop)
+
             widget = None
 
             # Widget based on type
@@ -105,8 +106,10 @@ class Settings(QMainWindow):
                 widget = self._create_text_widget(current_value)
             elif setting_type == "select":
                 widget = self._create_select_widget(setting_config, current_value, default_value)
-            
-            layout.addWidget(widget, row, 3)
+            elif setting_type == "list-dirs":
+                widget = self._create_list_dirs_widget(key, current_value if isinstance(current_value, list) else [])
+
+            layout.addWidget(widget, row, 3, alignment=Qt.AlignmentFlag.AlignTop)
             self.settings_widgets[key] = widget
 
         # Connect save button
@@ -170,16 +173,120 @@ class Settings(QMainWindow):
         options = setting_config.get("options", [])
         options = [self.tr(opt) for opt in options] if setting_config["key"] != "language" else options
         widget.addItems(options)
-        
+
         current_str = str(current_value) if current_value is not None else str(default_value)
         if current_str in options:
             widget.setCurrentText(current_str)
         else:
             widget.setCurrentText(str(default_value))
-        
+
         widget.setMaximumWidth(200)
         widget.setFixedHeight(40)
         return widget
+
+    def _create_list_dirs_widget(self, key: str, current_dirs: list):
+        """Create a widget for managing list of directories to skip."""
+        container = QWidget()
+        layout = QVBoxLayout()
+        layout.setContentsMargins(0, 0, 0, 0)
+        layout.setSpacing(5)
+        layout.setAlignment(Qt.AlignmentFlag.AlignTop)
+
+        # List widget to display folders
+        list_widget = QListWidget()
+        list_widget.setMaximumWidth(400)
+        list_widget.setFixedHeight(150)
+
+        # Store the list widget reference for reading values later
+        list_widget.key = key  # type: ignore
+
+        def create_item_widget(directory_path):
+            """Create a horizontal widget with folder name."""
+            item_widget = QWidget()
+            item_layout = QHBoxLayout()
+            item_layout.setContentsMargins(5, 1, 5, 1)
+            item_layout.setSpacing(10)
+
+            # Folder name label
+            name_label = QLabel(directory_path)
+            item_layout.addWidget(name_label, 1)
+
+            item_widget.setLayout(item_layout)
+            return item_widget
+
+        # Populate list with current directories
+        for directory in current_dirs:
+            item = QListWidgetItem()
+            item_widget = create_item_widget(directory)
+
+            list_widget.addItem(item)
+            item.setSizeHint(item_widget.sizeHint())
+            list_widget.setItemWidget(item, item_widget)
+
+        # Button layout for add and remove buttons
+        button_layout = QHBoxLayout()
+        button_layout.setContentsMargins(0, 0, 0, 0)
+        button_layout.setSpacing(10)
+
+        # Button to add folders
+        btn_add = QPushButton(self.tr("Add Folder"))
+        btn_add.setFixedHeight(40)
+        btn_add.setFixedWidth(100)
+
+        # Button to remove selected
+        btn_remove = QPushButton(self.tr("Remove Selected"))
+        btn_remove.setFixedHeight(40)
+        btn_remove.setFixedWidth(120)
+
+        # Connect add button to pick_path
+        def add_folder():
+            import os
+            # Get game directory (parent of working environment directory)
+            game_dir = os.path.dirname(os.getcwd())
+
+            path = pick_path(self, game_dir, type="dir")
+            if path and path != game_dir:
+                # Validate that folder is a direct child of game_dir
+                parent = os.path.dirname(path)
+                if parent != "":
+                    return
+
+                # Check if already in list
+                existing_items = []
+                for i in range(list_widget.count()):
+                    item_widget = list_widget.itemWidget(list_widget.item(i))
+                    if item_widget:
+                        label = item_widget.findChild(QLabel)
+                        if label:
+                            existing_items.append(label.text())
+
+                if path not in existing_items:
+                    item = QListWidgetItem()
+                    item_widget = create_item_widget(path)
+
+                    list_widget.addItem(item)
+                    item.setSizeHint(item_widget.sizeHint())
+                    list_widget.setItemWidget(item, item_widget)
+
+        def remove_selected():
+            for item in list_widget.selectedItems():
+                list_widget.takeItem(list_widget.row(item))
+
+        btn_add.clicked.connect(add_folder)
+        btn_remove.clicked.connect(remove_selected)
+
+        button_layout.addWidget(btn_add)
+        button_layout.addWidget(btn_remove)
+        button_layout.addStretch()
+
+        layout.addWidget(list_widget)
+        layout.addLayout(button_layout)
+
+        container.setLayout(layout)
+        # Store list widget reference for reading later
+        container.list_widget = list_widget  # type: ignore
+
+        return container
     
     def on_toggle(self, state: bool, button: SwitchControl, key: str):
         """Handler for toggle button state changes."""
@@ -241,10 +348,10 @@ class Settings(QMainWindow):
             key = setting_config["key"]
             setting_type = setting_config["type"]
             widget = self.settings_widgets.get(key)
-            
+
             if widget is None:
                 continue
-                
+
             if setting_type == "toggle":
                 settings_dict[key] = bool(widget.isChecked())
             elif setting_type == "text":
@@ -253,5 +360,10 @@ class Settings(QMainWindow):
                 options = setting_config.get("options", [])
                 options = [self.tr(opt) for opt in options] if setting_config["key"] != "language" else options
                 settings_dict[key] = setting_config.get("values", [])[options.index(widget.currentText())]
-        
+            elif setting_type == "list-dirs":
+                # Extract directories from the list widget
+                list_widget = widget.list_widget  # type: ignore
+                dirs = [list_widget.item(i).text() for i in range(list_widget.count())]
+                settings_dict[key] = dirs
+
         return settings_dict

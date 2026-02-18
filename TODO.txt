@@ -7,13 +7,16 @@ TODO:
 - Preset Data to ship
 - Search function (Library)
 - game metadata advanced, sort by filters, acquire on web?
-- finish the settings exclusion dir list
-
-- fix language support
 
 DONE Add Integration to get images
 DONE EXE package
 DONE architecture
 DONE settings via config.json
 DONE application design template, possibly QML template later on
+
+Local TODO:
+- update README.md
+
+DONE finish the settings exclusion dir list
+DONE fix language support
 DONE fix the massive issues

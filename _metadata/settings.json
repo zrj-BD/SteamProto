@@ -3,5 +3,6 @@
   "design": false,
   "scan_frequency": "7",
   "theme_activated": true,
-  "language": "en"
+  "language": "en",
+  "skipped_dirs": []
 }

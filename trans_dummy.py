@@ -63,7 +63,8 @@ QCoreApplication.translate("msg", "Save changes?")
 QCoreApplication.translate("msg", "Confirm Action")
 QCoreApplication.translate("msg", "Yes")
 QCoreApplication.translate("msg", "No")
-# QCoreApplication.translate("msg", "These changes will require a reset to function.") ### POSSIBLY FUTURE USE FOR LANG CHANGES WITHOUT
+# QCoreApplication.translate("msg", "These changes will require a reset to function.") ### POSSIBLY FUTURE USE FOR LANG CHANGES WITHOUT RESTART
+# 1. Pop-up and auto restart 2. Pop-up and manual restart 3. No restart in the future 4. Leave it as is
 # تتطلب هذه التغييرات إعادة تعيين لتعمل
 # Diese Änderungen erfordern einen Neustart
 # Estos cambios requerirán un reinicio
